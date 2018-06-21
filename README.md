@@ -6,3 +6,8 @@ python 3.x
 
 # install dependencies
 pip install -r ./requirements.txt
+
+# WhereWasI
+* create facets
+* merge co-planar and adjacent faces
+* quantize (pixelate) 3d object
