@@ -24,4 +24,5 @@ def explode_obj(obj_filename):
     return facet_list
 
 if __name__ == "__main__":
-    Visualizer.show(explode_obj('./example/cube.obj'))
+    pass
+    # Visualizer.show(explode_obj('./example/cube.obj'))

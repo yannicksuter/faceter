@@ -1,16 +1,18 @@
-from pyglet.gl import *
+from Model import *
+from ObjExporter import ObjExporter
 
-class Facet:
-    # def __init__(self):
-    #     self.vertices = pyglet.graphics.vertex_list(3, ('v3f', [-0.5,-0.5,0.0, 0.5,-0.5,0.0, 0.0,0.5,0.0]))
-    #     # self.vertices = pyglet.graphics.vertex_list(3, ('v3f', [-0.5,-0.5,0.0, 0.5,-0.5,0.0, 0.0,0.5,0.0]),
-    #     #                                                ('c3B', [100,200,220, 200,110,100, 100,250,100]))
-    def __init__(self, vertices, vert_normales):
-        # num_verts = int(vertices / 3)
-        self.vertices = pyglet.graphics.vertex_list(3, ('v3f', vertices))
+class Facet(Model):
+    def __init__(self, face):
+        pass
 
-        # for i in range(num_verts):
+if __name__ == "__main__":
+    import ObjLoader
 
+    obj_data = ObjLoader.ObjLoader('./example/cube.obj')
+    obj_model = Model.load_fromdata(obj_data)
 
-    def draw(self):
-        self.vertices.draw(GL_TRIANGLES)
+    facet_model = Model()
+    for face in obj_model._faces:
+        facet_model.merge(Facet(face))
+
+    ObjExporter.write(facet_model, './export/_faceted.obj')

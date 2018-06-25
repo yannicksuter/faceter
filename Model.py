@@ -1,7 +1,7 @@
 import ObjLoader
 import numpy as np
 
-DEBUG = True
+DEBUG = False
 
 class Edge:
     def __init__(self, v0, v0_id, v1, v1_id):
@@ -44,6 +44,7 @@ class Face:
         return False
 
     def detect_neighbour(self, face):
+        self._neighbour_faces = []
         for edge in self._edges:
             for edge_ in face._edges:
                 if edge.is_equal(edge_):
@@ -51,39 +52,55 @@ class Face:
                         self._neighbour_faces.append(face)
 
 class Model:
-    def __init__(self, obj_data):
+    def __init__(self):
+        self._name = 'unknown'
         self._vertices = []
-        for v in obj_data.vertices:
-            self._vertices.append(np.array(v))
-
         self._faces = []
+        self._vertices_norm = []
+
+    @classmethod
+    def load_fromdata(cls, obj_data):
+        cls = Model()
+        cls._name = 'unknown'
+
+        cls._vertices = []
+        for v in obj_data.vertices:
+            cls._vertices.append(np.array(v))
+
+        cls._faces = []
         for face_data in obj_data.faces:
             vertices = []
             vertices_ids = []
             for f_id, t_id, n_id in face_data:
-                vertices.append(self._vertices[f_id - 1])
+                vertices.append(cls._vertices[f_id - 1])
                 vertices_ids.append(f_id)
-            self._faces.append(Face(vertices, vertices_ids))
+            cls._faces.append(Face(vertices, vertices_ids))
 
         # detect face neighbours
-        for face in self._faces:
-            for face_ in self._faces:
+        for face in cls._faces:
+            for face_ in cls._faces:
                 if face is not face_:
                     face.detect_neighbour(face_)
 
         #calculate vertice normals
-        self._vertices_norm = []
+        cls._vertices_norm = []
         for v_id in range(len(obj_data.vertices)):
             v_norm = np.array([0.,0.,0.])
-            for face in self._faces:
+            for face in cls._faces:
                 if face.contains_v(v_id+1):
                     v_norm += face._norm
             v_norm /= np.linalg.norm(v_norm)
-            self._vertices_norm.append(v_norm)
+            cls._vertices_norm.append(v_norm)
+
+        return cls
+
+    def merge(self, model):
+
+        pass
 
 if __name__ == "__main__":
     obj_data = ObjLoader.ObjLoader('./example/quad.obj')
-    obj_model = Model(obj_data)
+    obj_model = Model.load_fromdata(obj_data)
 
     for f_id in range(len(obj_model._faces)):
         print(f'f[{f_id+1}] -> ids:{obj_model._faces[f_id]._vids}, n:{obj_model._faces[f_id]._norm}')
