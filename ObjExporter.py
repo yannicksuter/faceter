@@ -20,7 +20,7 @@ class ObjExporter:
                 # export faces
                 obj_export.write(f'\n')
                 for face in model._faces:
-                    obj_export.write(f'f {face._vids[0]}// {face._vids[1]}// {face._vids[2]}//\n')
+                    obj_export.write('f ' + ' '.join([f'{vid+1}//' for vid in face._vids]) + '\n')
 
                 print(f'{filename} successfully written.')
         except:
