@@ -4,8 +4,7 @@ import pyglet
 from pyglet.gl import gl
 from pyglet.gl import glu
 
-from Model import Model
-from Facet import Facet
+from Scene import Scene
 
 # colors
 black = (0, 0, 0, 1)
@@ -18,8 +17,8 @@ class Window(pyglet.window.Window):
         gl.glClearColor(*black)
         self.wireframe = False
 
-        # define model
-        self.model = Model(z=-3.5)
+        # define scene
+        self.scene = Scene(z=-3.5)
 
         @self.event
         def on_resize(width, height):
@@ -31,7 +30,7 @@ class Window(pyglet.window.Window):
             gl.glLoadIdentity()
             glu.gluPerspective(60.0, width / float(height), 0.1, 100.0)
 
-            # sets the model view
+            # sets the scene view
             gl.glMatrixMode(gl.GL_MODELVIEW)
             gl.glLoadIdentity()
 
@@ -47,8 +46,8 @@ class Window(pyglet.window.Window):
             else:
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-            # draws the current model
-            self.model.draw()
+            # draws the current scene
+            self.scene.draw()
 
         @self.event
         def on_key_press(symbol, modifiers):
@@ -58,23 +57,23 @@ class Window(pyglet.window.Window):
         @self.event
         def on_mouse_scroll(x, y, scroll_x, scroll_y):
             # scroll the MOUSE WHEEL to zoom
-            self.model.z -= scroll_y / 10.0
+            self.scene.z -= scroll_y / 10.0
 
         @self.event
         def on_mouse_drag(x, y, dx, dy, button, modifiers):
             # press the LEFT MOUSE BUTTON to rotate
             if button == pyglet.window.mouse.LEFT:
-                self.model.ry += dx / 2.0
-                self.model.rx -= dy / 2.0
+                self.scene.ry += dx / 2.0
+                self.scene.rx -= dy / 2.0
 
             # press the LEFT and RIGHT MOUSE BUTTONS simultaneously to pan
             if pyglet.window.mouse.RIGHT:
-                self.model.x += dx / 100.0
-                self.model.y += dy / 100.0
+                self.scene.x += dx / 100.0
+                self.scene.y += dy / 100.0
 
     # def show(self):
 
 def show(facets):
     window = Window(width=1024, height=768, caption='Faceter (Preview)', resizable=False)
-    window.model.facets += facets
+    window.scene.facets += facets
     pyglet.app.run()
