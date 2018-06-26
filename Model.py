@@ -1,4 +1,5 @@
 import ObjLoader
+from VecMath import VecMath
 import numpy as np
 
 EPSILON = 0.00001
@@ -32,7 +33,7 @@ class Face:
         # face normal vector
         self._vids = vertices_ids
         self._norm = np.cross(vertices[vertices_ids[1]]-vertices[vertices_ids[0]], vertices[vertices_ids[2]]-vertices[vertices_ids[0]])
-        self._norm /= np.linalg.norm(self._norm)
+        self._norm = VecMath.unit_vector(self._norm)
 
     def contains_v(self, vid):
         for id in self._vids:
@@ -85,8 +86,7 @@ class Model:
             for face in cls._faces:
                 if face.contains_v(v_id):
                     v_norm += face._norm
-            v_norm /= np.linalg.norm(v_norm)
-            cls._vertices_norm.append(v_norm)
+            cls._vertices_norm.append(VecMath.unit_vector(v_norm))
 
         return cls
 
@@ -113,9 +113,16 @@ class Model:
                 verts.append(model._vertices[vid])
             self.add_face(verts)
 
+    def simplify(self):
+        for face in self._faces:
+            for neighbour in face._neighbour_faces:
+                if VecMath.angle_between(face._norm, neighbour._norm) < EPSILON:
+                    print(f'same coplanar faces found...')
+
 if __name__ == "__main__":
     obj_data = ObjLoader.ObjLoader('./example/quad.obj')
     obj_model = Model.load_fromdata(obj_data)
+    obj_model.simplify()
 
     for f_id in range(len(obj_model._faces)):
         print(f'f[{f_id+1}] -> ids:{obj_model._faces[f_id]._vids}, n:{obj_model._faces[f_id]._norm}')

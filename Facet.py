@@ -29,6 +29,7 @@ if __name__ == "__main__":
 
     obj_data = ObjLoader.ObjLoader('./example/cube.obj')
     obj_model = Model.load_fromdata(obj_data)
+    obj_model.simplify()
 
     facet_model = Model()
     for face in obj_model._faces:
