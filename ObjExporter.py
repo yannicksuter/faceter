@@ -15,7 +15,7 @@ class ObjExporter:
                 # export vertices
                 obj_export.write(f'\n')
                 for vert in model._vertices:
-                    obj_export.write(f'v {vert[0]} {vert[1]} {vert[2]}\n')
+                    obj_export.write('v %.3f %.3f %.3f\n' % (vert[0], vert[1], vert[2]))
 
                 # export faces
                 obj_export.write(f'\n')
@@ -30,5 +30,7 @@ if __name__ == "__main__":
     import ObjLoader
     obj_data = ObjLoader.ObjLoader('./example/cube.obj')
     obj_model = Model.load_fromdata(obj_data)
+
+    obj_model.simplify()
 
     ObjExporter.write(obj_model, './export/_cube.obj')
