@@ -1,9 +1,26 @@
 import os
+import numpy as np
+from VecMath import VecMath
 from Model import *
 
 class ObjExporter:
     def __init__(self, model, export_filepath):
         pass
+
+    @staticmethod
+    def rotate_model(model, from_vec, to_vec=np.array([-1., 0., 0.])):
+        rot_mtx = VecMath.get_rotation_matrix(from_vec, to_vec)
+        for vid in range(len(model._vertices)):
+            vert = (rot_mtx.__matmul__(model._vertices[vid]))[0,:]
+            model._vertices[vid] = np.asarray(vert).reshape(-1)
+        return model
+
+    @staticmethod
+    def translate_model(model, ref_vec, to_vec=np.array([0., 0., 0.])):
+        t = to_vec - ref_vec
+        for vid in range(len(model._vertices)):
+            model._vertices[vid] -= t
+        return model
 
     @staticmethod
     def write(model, export_filepath):

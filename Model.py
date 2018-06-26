@@ -32,6 +32,7 @@ class Face:
 
         self._edges = []
         self._neighbour_faces = []
+
         for i in range(len(vertices_ids)):
             v0_id = vertices_ids[i]
             v1_id = vertices_ids[(i+1)%len(vertices_ids)]
@@ -41,6 +42,12 @@ class Face:
         self._vids = vertices_ids
         self._norm = np.cross(vertices[vertices_ids[1]]-vertices[vertices_ids[0]], vertices[vertices_ids[2]]-vertices[vertices_ids[0]])
         self._norm = VecMath.unit_vector(self._norm)
+
+        # face center
+        self._center = np.array([0., 0., 0.])
+        for vid in self._vids:
+            self._center += vertices[vid]
+        self._center /= float(len(self._vids))
 
     def contains_v(self, vid):
         for id in self._vids:
@@ -56,7 +63,7 @@ class Face:
                         return True
         return False
 
-    def combine_face(self, face):
+    def merge_face_vids(self, face):
         v_ids = None
         if len(self._edges) > 2 and len(face._edges) > 2:
             v_ids = []
@@ -77,13 +84,6 @@ class Model:
         self._faces = []
         self._vertices_norm = []
 
-    def calculate_neighbours(self):
-        for face in self._faces:
-            face._neighbour_faces = []
-            for face_ in self._faces:
-                if face is not face_ and face.is_neighbour(face_):
-                    face._neighbour_faces.append(face_)
-
     @classmethod
     def load_fromdata(cls, obj_data, scale=1.):
         cls = Model()
@@ -101,21 +101,18 @@ class Model:
                 vertices_ids.append(f_id)
             cls._faces.append(Face(cls._vertices, vertices_ids))
 
-        # detect face neighbours
+        # detect face neighbours and vertice-normals
         cls.calculate_neighbours()
-
-        #calculate vertice normals
         cls.calculate_vertice_norms()
 
-        cls._vertices_norm = []
-        for v_id in range(len(obj_data.vertices)):
-            v_norm = np.array([0.,0.,0.])
-            for face in cls._faces:
-                if face.contains_v(v_id):
-                    v_norm += face._norm
-            cls._vertices_norm.append(VecMath.unit_vector(v_norm))
-
         return cls
+
+    def calculate_centers(self):
+        for face in self._faces:
+            face._center = np.array([0., 0., 0.])
+            for vid in face._vids:
+                face._center += self._vertices[vid]
+            face._center /= float(len(face._vids))
 
     def calculate_vertice_norms(self):
         self._vertices_norm = []
@@ -125,6 +122,13 @@ class Model:
                 if face.contains_v(v_id):
                     v_norm += face._norm
             self._vertices_norm.append(VecMath.unit_vector(v_norm))
+
+    def calculate_neighbours(self):
+        for face in self._faces:
+            face._neighbour_faces = []
+            for face_ in self._faces:
+                if face is not face_ and face.is_neighbour(face_):
+                    face._neighbour_faces.append(face_)
 
     def get_vertId(self, vert):
         for vid in range(len(self._vertices)):
@@ -155,7 +159,7 @@ class Model:
         for face in list(self._faces): # very important to copy the list first as we modify while iteration is not done yet
             for neighbour in face._neighbour_faces:
                 if VecMath.angle_between(face._norm, neighbour._norm) < EPSILON:
-                    v_ids = face.combine_face(neighbour)
+                    v_ids = face.merge_face_vids(neighbour)
                     # as we are modifying the list while iterating though it we need this test to check if the consolidation of this tri was already done
                     if v_ids and len(face._vids) < len(v_ids):
                         self.remove_face(face)
@@ -163,6 +167,7 @@ class Model:
                         self.add_face([self._vertices[id] for id in v_ids])
 
         # recalculate neighbours and v_norms
+        self.calculate_centers()
         self.calculate_neighbours()
         self.calculate_vertice_norms()
 

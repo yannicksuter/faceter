@@ -12,5 +12,25 @@ class TestVecMath(unittest.TestCase):
         self.assertEqual(VecMath.angle_between((1, 0, 0), (1, 0, 0)), 0.0)
         self.assertEqual(VecMath.angle_between((1, 0, 0), (-1, 0, 0)), 3.141592653589793)
 
+    def test_get_rotation_mtx(self):
+        a = np.array([1., 0., 0.])
+        b = np.array([0., 1., 0.])
+        rot = VecMath.get_rotation_matrix(a, b)
+        self.assertIsNotNone(rot)
+
+        a2 = rot.__matmul__(a)
+        self.assertNotEqual(VecMath.angle_between(a, b), 0.0)
+        self.assertEqual(VecMath.angle_between(a2, b), 0.0)
+
+    def test_get_rotation_mtx_equal_vecs(self):
+        """ edge case: would normaly break rot mtx. use identity mtx instead """
+        a = np.array([1., 0., 0.])
+        b = np.array([1., 0., 0.])
+        rot = VecMath.get_rotation_matrix(a, b)
+        self.assertIsNotNone(rot)
+
+        a2 = rot.__matmul__(a)
+        self.assertEqual(VecMath.angle_between(a2, b), 0.0)
+
 if __name__ == '__main__':
     unittest.main()
