@@ -147,7 +147,7 @@ class Model:
                         self.add_face([self._vertices[id] for id in v_ids])
 
 if __name__ == "__main__":
-    obj_data = ObjLoader.ObjLoader('./example/quad.obj')
+    obj_data = ObjLoader.ObjLoader('./example/cube.obj')
     obj_model = Model.load_fromdata(obj_data)
     obj_model.simplify()
 
