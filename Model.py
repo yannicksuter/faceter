@@ -18,6 +18,13 @@ class Edge:
             return True
         return False
 
+    @staticmethod
+    def get_shared_edge(edge, edge_list):
+        for e_id in range(len(edge_list)):
+            if edge_list[e_id].is_equal(edge):
+                return e_id
+        return None
+
 class Face:
     def __init__(self, vertices, vertices_ids):
         if DEBUG:
@@ -48,6 +55,20 @@ class Face:
                 if edge.is_equal(edge_):
                     if face not in self._neighbour_faces:
                         self._neighbour_faces.append(face)
+
+    def combine_face(self, face):
+        v_ids = None
+        if len(self._edges) > 2 and len(face._edges) > 2:
+            v_ids = []
+            for edge1 in self._edges:
+                v_ids.append(edge1.v0_id)
+                shared_edge_id = Edge.get_shared_edge(edge1, face._edges)
+                if shared_edge_id:
+                    edge_count = len(face._edges)
+                    for i in range(edge_count-2):
+                        insert_edge = face._edges[(i+shared_edge_id+1)%edge_count]
+                        v_ids.append(insert_edge.v1_id)
+        return v_ids
 
 class Model:
     def __init__(self):
@@ -106,18 +127,24 @@ class Model:
             vertices_ids.append(vid)
         self._faces.append(Face(self._vertices, vertices_ids))
 
-    def merge(self, model):
+    def remove_face(self, face):
+        # todo: remove unused verts when removing a face
+        if face in self._faces:
+            self._faces.remove(face)
+
+    def merge_model(self, model):
         for face in model._faces:
-            verts = []
-            for vid in face._vids:
-                verts.append(model._vertices[vid])
-            self.add_face(verts)
+            self.add_face([model._vertices[vid] for vid in face._vids])
 
     def simplify(self):
         for face in self._faces:
             for neighbour in face._neighbour_faces:
                 if VecMath.angle_between(face._norm, neighbour._norm) < EPSILON:
-                    print(f'same coplanar faces found...')
+                    v_ids = face.combine_face(neighbour)
+                    if v_ids:
+                        self.remove_face(face)
+                        self.remove_face(neighbour)
+                        self.add_face([self._vertices[id] for id in v_ids])
 
 if __name__ == "__main__":
     obj_data = ObjLoader.ObjLoader('./example/quad.obj')
