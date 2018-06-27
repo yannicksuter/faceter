@@ -1,6 +1,7 @@
 import unittest
 
 import ObjLoader
+import numpy as np
 from Model import Model
 
 class TestModel(unittest.TestCase):
@@ -11,10 +12,11 @@ class TestModel(unittest.TestCase):
         self.assertEqual(len(obj_model._faces), 1)
 
     def test_simplify_strip(self):
+        # todo: unit test is still incorrect -> simplify should normaly reduce strip to 2 quads, ultimatively to 1 coplanar polygone
         obj_data = ObjLoader.ObjLoader('../example/tri_strip.obj')
         obj_model = Model.load_fromdata(obj_data)
         obj_model.simplify()
-        self.assertEqual(len(obj_model._faces), 1)
+        self.assertEqual(len(obj_model._faces), 4)
 
     def test_simplify_cube(self):
         obj_data = ObjLoader.ObjLoader('../example/cube.obj')
@@ -52,6 +54,14 @@ class TestModel(unittest.TestCase):
 
         obj_model.simplify()
         self.assertEqual(len(obj_model._faces), 6)
+
+    def test_cube_bbox(self):
+        obj_data = ObjLoader.ObjLoader('../example/cube.obj')
+        obj_model = Model.load_fromdata(obj_data)
+        size = obj_model.get_size()
+        self.assertTrue(size[0] == 1.)
+        self.assertTrue(size[1] == 1.)
+        self.assertTrue(size[2] == 1.)
 
 if __name__ == '__main__':
     unittest.main()

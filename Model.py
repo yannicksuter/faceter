@@ -83,6 +83,7 @@ class Model:
         self._vertices = []
         self._faces = []
         self._vertices_norm = []
+        self._bbox = [np.array([0.,0.,0.]), np.array([0.,0.,0.])]
 
     @classmethod
     def load_fromdata(cls, obj_data, scale=1.):
@@ -104,6 +105,7 @@ class Model:
         # detect face neighbours and vertice-normals
         cls.calculate_neighbours()
         cls.calculate_vertice_norms()
+        cls.calculate_boundingbox()
 
         return cls
 
@@ -129,6 +131,19 @@ class Model:
             for face_ in self._faces:
                 if face is not face_ and face.is_neighbour(face_):
                     face._neighbour_faces.append(face_)
+
+    def calculate_boundingbox(self):
+        self._bbox = [np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]]), np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]])]
+        for vert in self._vertices:
+            self._bbox[0][0] = min(self._bbox[0][0], vert[0])
+            self._bbox[0][1] = min(self._bbox[0][1], vert[1])
+            self._bbox[0][2] = min(self._bbox[0][2], vert[2])
+            self._bbox[1][0] = max(self._bbox[1][0], vert[0])
+            self._bbox[1][1] = max(self._bbox[1][1], vert[1])
+            self._bbox[1][2] = max(self._bbox[1][2], vert[2])
+
+    def get_size(self):
+        return np.absolute(self._bbox[1] - self._bbox[0])
 
     def get_vertId(self, vert):
         for vid in range(len(self._vertices)):
@@ -170,6 +185,7 @@ class Model:
         self.calculate_centers()
         self.calculate_neighbours()
         self.calculate_vertice_norms()
+        self.calculate_boundingbox()
 
 if __name__ == "__main__":
     obj_data = ObjLoader.ObjLoader('./example/cube.obj')
