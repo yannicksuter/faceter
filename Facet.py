@@ -2,17 +2,21 @@ from Model import *
 from ObjExporter import ObjExporter
 
 class Facet(Model):
-    def __init__(self, face, model, height):
+    def __init__(self, face, model, height, top_height, top_size):
         Model.__init__(self)
 
         # define upper and lower vertices
         verts = []
         verts_inner = []
+        verts_top = []
+
         for vid in face._vids:
             verts.append(model._vertices[vid])
             verts_inner.append(model._vertices[vid] + (-1. * height * model._vertices_norm[vid]))
+            verts_top.append(face._center + ((model._vertices[vid]-face._center) * top_size) - (face._norm * top_height))
         self.add_face(verts)
-        self.add_face(verts_inner)
+        # self.add_face(verts_inner)
+        self.add_face(verts_top)
 
         # add sides
         cnt = len(face._vids)
@@ -23,6 +27,13 @@ class Facet(Model):
             side_verts.append(verts_inner[(i+1)%cnt])
             side_verts.append(verts_inner[i])
             self.add_face(side_verts)
+
+            top_side_verts = []
+            top_side_verts.append(verts_inner[i])
+            top_side_verts.append(verts_inner[(i+1)%cnt])
+            top_side_verts.append(verts_top[(i+1)%cnt])
+            top_side_verts.append(verts_top[i])
+            self.add_face(top_side_verts)
 
 if __name__ == "__main__":
     import ObjLoader
@@ -36,7 +47,7 @@ if __name__ == "__main__":
 
     facet_model = Model()
     for face_id in range(len(obj_model._faces)):
-        facet = Facet(obj_model._faces[face_id], obj_model, 2.)
+        facet = Facet(obj_model._faces[face_id], obj_model, 2., top_size=.1, top_height=3.)
         facet = ObjExporter.rotate_model(facet, obj_model._faces[face_id]._norm)
         ObjExporter.write(facet, f'./export/_rpart[{face_id+1}].obj')
 
