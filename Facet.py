@@ -1,5 +1,5 @@
 from Model import *
-from ObjExporter import ObjExporter
+from Exporter import Exporter
 
 class Facet(Model):
     def __init__(self, face, model, brick_height, top_height, top_size):
@@ -54,7 +54,8 @@ if __name__ == "__main__":
     bbox_size = obj_model.get_size()
     print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
-    ObjExporter.write(obj_model, f'./export/_{obj_name}.obj')
+    # Exporter.write(obj_model, f'./export/_{obj_name}.obj')
+    Exporter.write_stl(obj_model, f'./export/_{obj_name}.stl')
 
     y = 0.
     target_lid_size = 100. #mm^2
@@ -72,17 +73,17 @@ if __name__ == "__main__":
         facet = Facet(ref_face, obj_model, brick_height=10., top_height=15., top_size=ttop_size)
         faceted_model.merge_model(facet)
 
-        facet = ObjExporter.rotate_model(facet, obj_model._faces[face_id]._norm)
-        ObjExporter.write(facet, f'./export/_{obj_name}_part_{face_id+1}.obj')
+        facet = Exporter.rotate_model(facet, obj_model._faces[face_id]._norm)
+        Exporter.write_obj(facet, f'./export/_{obj_name}_part_{face_id+1}.obj')
 
         # calculate facet meta data for proper export
         facet.calculate_centers()
         facet.calculate_boundingbox()
         y += facet.get_size()[1]
 
-        facet = ObjExporter.translate_model(facet, np.array([0., y, 0.]), facet._faces[0]._center)
+        facet = Exporter.translate_model(facet, np.array([0., y, 0.]), facet._faces[0]._center)
         striped_model.merge_model(facet)
 
-    striped_model = ObjExporter.move_model(striped_model, np.array([0., -.5*y, 0.]))
-    ObjExporter.write(striped_model, f'./export/_{obj_name}_striped.obj')
-    ObjExporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')
+    striped_model = Exporter.move_model(striped_model, np.array([0., -.5*y, 0.]))
+    Exporter.write_obj(striped_model, f'./export/_{obj_name}_striped.obj')
+    Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj')

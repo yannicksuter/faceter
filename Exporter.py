@@ -1,9 +1,9 @@
-import os
+import os, datetime
 import numpy as np
 from VecMath import VecMath
 from Model import *
 
-class ObjExporter:
+class Exporter:
     def __init__(self, model, export_filepath):
         pass
 
@@ -29,7 +29,7 @@ class ObjExporter:
         return model
 
     @staticmethod
-    def write(model, export_filepath):
+    def write_obj(model, export_filepath):
         try:
             path, filename = os.path.split(export_filepath)
             with open(export_filepath, 'w') as obj_export:
@@ -49,6 +49,39 @@ class ObjExporter:
         except:
             print("Export: .obj file could not be written.")
 
+    STL_AUTO = 0
+    STL_ASCII = 1
+    STL_BINARY = 2
+
+    @staticmethod
+    def write_stl(model, export_filepath, mode=STL_ASCII):
+        filename = os.path.split(export_filepath)[-1]
+
+        if mode is Exporter.STL_ASCII:
+            save_func = Exporter.__save_stl_ascii
+        else:
+            save_func = Exporter.__save_stl_binary
+
+        with open(export_filepath, 'w') as fh:
+            save_func(fh, filename, model)
+
+    @staticmethod
+    def __save_stl_binary(fh, name, model):
+        raise NotImplementedError
+
+    @staticmethod
+    def __save_stl_ascii(fh, name, model):
+        fh.write(f'solid {name}\n')
+        for i in range(len(model._faces)):
+            face = model._faces[i]
+            fh.write("facet normal %f %f %f\n" % tuple(face._norm[:3]))
+            fh.write("  outer loop\n")
+            for v_id in face._vids:
+                fh.write("    vertex %f %f %f\n" % tuple(model._vertices[v_id][:3]))
+            fh.write('  endloop\n')
+            fh.write('endfacet\n')
+            fh.write(f'endsolid {name}\n')
+
 if __name__ == "__main__":
     import ObjLoader
     obj_data = ObjLoader.ObjLoader('./example/cube.obj')
@@ -56,4 +89,4 @@ if __name__ == "__main__":
 
     obj_model.simplify()
 
-    ObjExporter.write(obj_model, './export/_cube.obj')
+    Exporter.write_obj(obj_model, './export/_cube.obj')

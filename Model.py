@@ -32,6 +32,7 @@ class Face:
         if DEBUG:
             print(f'FACE: {vertices_ids}')
 
+        self._vids = vertices_ids
         self._edges = []
         self._neighbour_faces = []
 
@@ -41,15 +42,17 @@ class Face:
             self._edges.append(Edge(v0_id, v1_id, np.linalg.norm(vertices[v1_id]-vertices[v0_id])))
 
         # face normal vector
-        self._vids = vertices_ids
-        self._norm = np.cross(vertices[vertices_ids[1]]-vertices[vertices_ids[0]], vertices[vertices_ids[2]]-vertices[vertices_ids[0]])
-        self._norm = VecMath.unit_vector(self._norm)
+        self.calculate_norm(vertices)
 
         # face center
         self._center = np.array([0., 0., 0.])
         for vid in self._vids:
             self._center += vertices[vid]
         self._center /= float(len(self._vids))
+
+    def calculate_norm(self, vertices):
+        self._norm = np.cross(vertices[self._vids[1]]-vertices[self._vids[0]], vertices[self._vids[2]]-vertices[self._vids[0]])
+        self._norm = VecMath.unit_vector(self._norm)
 
     def contains_v(self, vid):
         for id in self._vids:
@@ -132,6 +135,10 @@ class Model:
                 face._center += self._vertices[vid]
             face._center /= float(len(face._vids))
 
+    def calculate_face_norms(self):
+        for face in self._faces:
+            face.calculate_norm(self._vertices)
+
     def calculate_vertice_norms(self):
         self._vertices_norm = []
         for v_id in range(len(self._vertices)):
@@ -187,16 +194,6 @@ class Model:
     def merge_model(self, model):
         for face in model._faces:
             self.add_face([model._vertices[vid] for vid in face._vids])
-
-    def translate(self, vec):
-        for v_id in range(len(self._vertices)):
-            self._vertices[v_id] += vec
-        self.calculate_centers()
-        self.calculate_boundingbox()
-
-    def rotate(self, rot):
-        # todo: implement
-        pass
 
     def simplify(self):
         for face in list(self._faces): # very important to copy the list first as we modify while iteration is not done yet
