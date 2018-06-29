@@ -170,6 +170,16 @@ class Model:
         for face in model._faces:
             self.add_face([model._vertices[vid] for vid in face._vids])
 
+    def translate(self, vec):
+        for v_id in range(len(self._vertices)):
+            self._vertices[v_id] += vec
+        self.calculate_centers()
+        self.calculate_boundingbox()
+
+    def rotate(self, rot):
+        # todo: implement
+        pass
+
     def simplify(self):
         for face in list(self._faces): # very important to copy the list first as we modify while iteration is not done yet
             for neighbour in face._neighbour_faces:
