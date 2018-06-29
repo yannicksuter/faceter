@@ -14,13 +14,14 @@ class Facet(Model):
             verts.append(model._vertices[vid])
             verts_inner.append(model._vertices[vid] + (-1. * brick_height * model._vertices_norm[vid]))
             verts_top.append(face._center + ((model._vertices[vid]-face._center) * top_size) - (face._norm * top_height))
-        self.add_face(verts)
+        face_bottom = self.add_face(verts)
 
         # reverse id order to generate the correct face orientation
         verts = list(reversed(verts))
         verts_inner = list(reversed(verts_inner))
         verts_top = list(reversed(verts_top))
-        self.add_face(verts_top)
+        face_top = self.add_face(verts_top)
+        # print(f'\n{top_size} :: {face_bottom.get_area()} <=> {face_top.get_area()}\n')
 
         # add sides
         cnt = len(face._vids)
@@ -56,14 +57,19 @@ if __name__ == "__main__":
     ObjExporter.write(obj_model, f'./export/_{obj_name}.obj')
 
     y = 0.
+    target_lid_size = 100. #mm^2
 
     faceted_model = Model()
     striped_model = Model()
     for face_id in range(len(obj_model._faces)):
         ref_face = obj_model._faces[face_id]
         print(f'processing facet #{face_id}')
-        facet = Facet(ref_face, obj_model, brick_height=10., top_size=.1, top_height=15.)
-        # facet.translate(ref_face._norm * 10)
+
+        # calculate scale factor to get a constant lid size
+        face_surface = ref_face.get_area()
+        ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
+
+        facet = Facet(ref_face, obj_model, brick_height=10., top_height=15., top_size=ttop_size)
         faceted_model.merge_model(facet)
 
         facet = ObjExporter.rotate_model(facet, obj_model._faces[face_id]._norm)

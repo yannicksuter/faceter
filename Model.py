@@ -1,14 +1,16 @@
 import ObjLoader
 from VecMath import VecMath
 import numpy as np
+import math
 
 EPSILON = 0.00001
 DEBUG = False
 
 class Edge:
-    def __init__(self, v0_id, v1_id):
+    def __init__(self, v0_id, v1_id, len):
         self.v0_id = v0_id
         self.v1_id = v1_id
+        self.length = len
         if DEBUG:
             print(f'EDGE: {v0_id} -> {v1_id}')
 
@@ -36,7 +38,7 @@ class Face:
         for i in range(len(vertices_ids)):
             v0_id = vertices_ids[i]
             v1_id = vertices_ids[(i+1)%len(vertices_ids)]
-            self._edges.append(Edge(v0_id, v1_id))
+            self._edges.append(Edge(v0_id, v1_id, np.linalg.norm(vertices[v1_id]-vertices[v0_id])))
 
         # face normal vector
         self._vids = vertices_ids
@@ -62,6 +64,20 @@ class Face:
                     if face not in self._neighbour_faces:
                         return True
         return False
+
+    def get_triangle_area(self, a, b, c):
+        """
+        Uses the heron formula to calculate the area
+        of the triangle where `a`,`b` and `c` are the side lengths.
+        """
+        s = (a + b + c) / 2
+        return math.sqrt(s * (s - a) * (s - b) * (s - c))
+
+    def get_area(self):
+        if len(self._vids) > 3:
+            # todo: needs to be triangulated first, then sum(get_triangle_area(triangle) for triangles)
+            raise NotImplementedError
+        return self.get_triangle_area(self._edges[0].length, self._edges[1].length, self._edges[2].length)
 
     def merge_face_vids(self, face):
         v_ids = None
@@ -159,7 +175,9 @@ class Model:
                 vid = len(self._vertices)
                 self._vertices.append(vert)
             vertices_ids.append(vid)
-        self._faces.append(Face(self._vertices, vertices_ids))
+        face = Face(self._vertices, vertices_ids)
+        self._faces.append(face)
+        return face
 
     def remove_face(self, face):
         # todo: remove unused verts when removing a face
