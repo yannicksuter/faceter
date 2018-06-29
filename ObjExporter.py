@@ -23,6 +23,12 @@ class ObjExporter:
         return model
 
     @staticmethod
+    def move_model(model, vec):
+        for vid in range(len(model._vertices)):
+            model._vertices[vid] -= vec
+        return model
+
+    @staticmethod
     def write(model, export_filepath):
         try:
             path, filename = os.path.split(export_filepath)
@@ -39,9 +45,9 @@ class ObjExporter:
                 for face in model._faces:
                     obj_export.write('f ' + ' '.join([f'{vid+1}//' for vid in face._vids]) + '\n')
 
-                print(f'{filename} successfully written.')
+                print(f'Export: {filename} successfully written.')
         except:
-            print(".obj file could not be written.")
+            print("Export: .obj file could not be written.")
 
 if __name__ == "__main__":
     import ObjLoader

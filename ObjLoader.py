@@ -7,6 +7,8 @@ def catch(func, handle=lambda e : e, *args, **kwargs):
 
 class ObjLoader(object):
     def __init__(self, fileName):
+        print(f'Loading {fileName} ...')
+
         self.vertices = []
         self.normals = []
         self.texture_coords = []

@@ -38,22 +38,39 @@ class Facet(Model):
 if __name__ == "__main__":
     import ObjLoader
 
-    obj_data = ObjLoader.ObjLoader('./example/cube.obj')
-    obj_model = Model.load_fromdata(obj_data, scale=10.)
+    obj_name = 'lamp'
+
+    obj_data = ObjLoader.ObjLoader(f'./example/{obj_name}.obj')
+    obj_model = Model.load_fromdata(obj_data, scale=1.)
     obj_model.simplify()
-    ObjExporter.write(obj_model, './export/_cube.obj')
 
-    z = 0.
+    print(f'Faces: {len(obj_model._faces)}')
+    print(f'Vertices: {len(obj_model._vertices)}')
+    bbox_size = obj_model.get_size()
+    print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
-    facet_model = Model()
+    ObjExporter.write(obj_model, f'./export/_{obj_name}.obj')
+
+    y = 0.
+
+    faceted_model = Model()
+    striped_model = Model()
     for face_id in range(len(obj_model._faces)):
-        facet = Facet(obj_model._faces[face_id], obj_model, 2., top_size=.1, top_height=3.)
+        print(f'processing facet #{face_id}')
+        facet = Facet(obj_model._faces[face_id], obj_model, 10., top_size=.1, top_height=15.)
+        faceted_model.merge_model(facet)
+
         facet = ObjExporter.rotate_model(facet, obj_model._faces[face_id]._norm)
-        ObjExporter.write(facet, f'./export/_rpart[{face_id+1}].obj')
+        ObjExporter.write(facet, f'./export/_{obj_name}_part_{face_id+1}.obj')
 
-        z += 11.
+        # calculate facet meta data for proper export
         facet.calculate_centers()
-        facet = ObjExporter.translate_model(facet, np.array([0., z, 0.]), facet._faces[0]._center)
-        facet_model.merge_model(facet)
+        facet.calculate_boundingbox()
+        y += facet.get_size()[1]
 
-    ObjExporter.write(facet_model, './export/_faceted.obj')
+        facet = ObjExporter.translate_model(facet, np.array([0., y, 0.]), facet._faces[0]._center)
+        striped_model.merge_model(facet)
+
+    striped_model = ObjExporter.move_model(striped_model, np.array([0., -.5*y, 0.]))
+    ObjExporter.write(striped_model, f'./export/_{obj_name}_striped.obj')
+    ObjExporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')
