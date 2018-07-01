@@ -21,7 +21,7 @@ class Facet(Model):
         verts_inner = list(reversed(verts_inner))
         verts_top = list(reversed(verts_top))
         face_top = self.add_face(verts_top)
-        # print(f'\n{top_size} :: {face_bottom.get_area()} <=> {face_top.get_area()}\n')
+        # print(f'\n{top_size} :: {face_bottom[0].get_area()} <=> {face_top[0].get_area()}\n')
 
         # add sides
         cnt = len(face._vids)
@@ -74,7 +74,9 @@ if __name__ == "__main__":
         faceted_model.merge_model(facet)
 
         facet = Exporter.rotate_model(facet, obj_model._faces[face_id]._norm)
+        facet.calculate_face_norms()
         Exporter.write_obj(facet, f'./export/_{obj_name}_part_{face_id+1}.obj')
+        Exporter.write_stl(facet, f'./export/_{obj_name}_part_{face_id+1}.stl')
 
         # calculate facet meta data for proper export
         facet.calculate_centers()
@@ -86,4 +88,7 @@ if __name__ == "__main__":
 
     striped_model = Exporter.move_model(striped_model, np.array([0., -.5*y, 0.]))
     Exporter.write_obj(striped_model, f'./export/_{obj_name}_striped.obj')
+
+    faceted_model.triangulate()
     Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj')
+    # Exporter.write_stl(faceted_model, f'./export/_{obj_name}_faceted.stl')

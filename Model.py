@@ -121,11 +121,7 @@ class Model:
                 vertices_ids.append(f_id)
             cls._faces.append(Face(cls._vertices, vertices_ids))
 
-        # detect face neighbours and vertice-normals
-        cls.calculate_neighbours()
-        cls.calculate_vertice_norms()
-        cls.calculate_boundingbox()
-
+        cls.__update()
         return cls
 
     def calculate_centers(self):
@@ -182,6 +178,7 @@ class Model:
                 vid = len(self._vertices)
                 self._vertices.append(vert)
             vertices_ids.append(vid)
+
         face = Face(self._vertices, vertices_ids)
         self._faces.append(face)
         return face
@@ -196,6 +193,7 @@ class Model:
             self.add_face([model._vertices[vid] for vid in face._vids])
 
     def simplify(self):
+        face_count_before = len(self._faces)
         for face in list(self._faces): # very important to copy the list first as we modify while iteration is not done yet
             for neighbour in face._neighbour_faces:
                 if VecMath.angle_between(face._norm, neighbour._norm) < EPSILON:
@@ -205,11 +203,26 @@ class Model:
                         self.remove_face(face)
                         self.remove_face(neighbour)
                         self.add_face([self._vertices[id] for id in v_ids])
+        self.__update()
+        print(f'Simplify: Face count {face_count_before} before -> {len(self._faces)} after')
 
-        # recalculate neighbours and v_norms
+    def triangulate(self):
+        face_count_before = len(self._faces)
+        for face in list(self._faces):
+            vert_count = len(face._vids)
+            if vert_count > 3:
+                self.remove_face(face)
+                for i in range(vert_count - 2):
+                    v_ids = [face._vids[0], face._vids[i+1], face._vids[i+2]]
+                    self.add_face([self._vertices[id] for id in v_ids])
+        self.__update()
+        print(f'Triangulation: Face count {face_count_before} before -> {len(self._faces)} after')
+
+    def __update(self):
         self.calculate_centers()
         self.calculate_neighbours()
         self.calculate_vertice_norms()
+        self.calculate_face_norms()
         self.calculate_boundingbox()
 
 if __name__ == "__main__":

@@ -38,12 +38,18 @@ class Exporter:
                 # export vertices
                 obj_export.write(f'\n')
                 for vert in model._vertices:
-                    obj_export.write('v %.3f %.3f %.3f\n' % (vert[0], vert[1], vert[2]))
+                    obj_export.write('v %.3f %.3f %.3f\n' % tuple(vert[:3]))
+
+                obj_export.write(f'\n')
+                for face in model._faces:
+                    obj_export.write('vn %.3f %.3f %.3f\n' % tuple(face._norm[:3]))
 
                 # export faces
                 obj_export.write(f'\n')
-                for face in model._faces:
-                    obj_export.write('f ' + ' '.join([f'{vid+1}//' for vid in face._vids]) + '\n')
+                # for face in model._faces:
+                for f_id in range(len(model._faces)):
+                    face = model._faces[f_id]
+                    obj_export.write('f ' + ' '.join([f'{vid+1}//{f_id+1}' for vid in face._vids]) + '\n')
 
                 print(f'Export: {filename} successfully written.')
         except:
@@ -64,6 +70,7 @@ class Exporter:
 
         with open(export_filepath, 'w') as fh:
             save_func(fh, filename, model)
+            print(f'Export: {filename} successfully written.')
 
     @staticmethod
     def __save_stl_binary(fh, name, model):
