@@ -8,7 +8,7 @@ class Exporter:
         pass
 
     @staticmethod
-    def rotate_model(model, from_vec, to_vec=np.array([-1., 0., 0.])):
+    def rotate_model(model, from_vec, to_vec=np.array([0., 0., -1.])):
         rot_mtx = VecMath.get_rotation_matrix(from_vec, to_vec)
         for vid in range(len(model._vertices)):
             vert = (rot_mtx.__matmul__(model._vertices[vid]))[0,:]

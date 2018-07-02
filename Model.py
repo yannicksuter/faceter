@@ -121,7 +121,7 @@ class Model:
                 vertices_ids.append(f_id)
             cls._faces.append(Face(cls._vertices, vertices_ids))
 
-        cls.__update()
+        cls._update()
         return cls
 
     def calculate_centers(self):
@@ -203,7 +203,7 @@ class Model:
                         self.remove_face(face)
                         self.remove_face(neighbour)
                         self.add_face([self._vertices[id] for id in v_ids])
-        self.__update()
+        self._update()
         print(f'Simplify: Face count {face_count_before} before -> {len(self._faces)} after')
 
     def triangulate(self):
@@ -215,10 +215,10 @@ class Model:
                 for i in range(vert_count - 2):
                     v_ids = [face._vids[0], face._vids[i+1], face._vids[i+2]]
                     self.add_face([self._vertices[id] for id in v_ids])
-        self.__update()
+        self._update()
         print(f'Triangulation: Face count {face_count_before} before -> {len(self._faces)} after')
 
-    def __update(self):
+    def _update(self):
         self.calculate_centers()
         self.calculate_neighbours()
         self.calculate_vertice_norms()

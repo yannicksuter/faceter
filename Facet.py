@@ -74,21 +74,18 @@ if __name__ == "__main__":
         faceted_model.merge_model(facet)
 
         facet = Exporter.rotate_model(facet, obj_model._faces[face_id]._norm)
-        facet.calculate_face_norms()
+        facet._update()
+
+        # export single part
         Exporter.write_obj(facet, f'./export/_{obj_name}_part_{face_id+1}.obj')
-        Exporter.write_stl(facet, f'./export/_{obj_name}_part_{face_id+1}.stl')
 
-        # calculate facet meta data for proper export
-        facet.calculate_centers()
-        facet.calculate_boundingbox()
+        # concatenate all parts to one strip
         y += facet.get_size()[1]
-
         facet = Exporter.translate_model(facet, np.array([0., y, 0.]), facet._faces[0]._center)
         striped_model.merge_model(facet)
 
     striped_model = Exporter.move_model(striped_model, np.array([0., -.5*y, 0.]))
     Exporter.write_obj(striped_model, f'./export/_{obj_name}_striped.obj')
 
-    faceted_model.triangulate()
+    # faceted_model.triangulate()
     Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj')
-    # Exporter.write_stl(faceted_model, f'./export/_{obj_name}_faceted.stl')

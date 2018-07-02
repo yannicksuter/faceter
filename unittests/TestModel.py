@@ -21,8 +21,7 @@ class TestModel(unittest.TestCase):
     def test_simplify_cube(self):
         obj_data = ObjLoader.ObjLoader('../example/cube.obj')
         obj_model = Model.load_fromdata(obj_data)
-        """
-        before simplification:
+        """ before simplification:
         
         0 6 4 <<--
         0 2 6 n0
