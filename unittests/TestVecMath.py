@@ -32,5 +32,20 @@ class TestVecMath(unittest.TestCase):
         a2 = rot.__matmul__(a)
         self.assertEqual(VecMath.angle_between(a2, b), 0.0)
 
+    def test_dist_point_to_line(self):
+        line_p = np.array([0., 0., 0.])
+        line_dir = np.array([1., 0., 0.])
+
+        dist = VecMath.dist_point_to_line(line_p, line_dir, np.array([-1., 2., 0.]))
+        self.assertEqual(dist, 2.)
+
+    def test_dist_point_to_line2(self):
+        line_p = np.array([0., 0., 0.])
+        line_dir = np.array([1., 1.,1.])
+
+        dist = VecMath.dist_point_to_line(line_p, line_dir, np.array([0., .2, .5]))
+        self.assertEqual(dist, 2.)
+
+
 if __name__ == '__main__':
     unittest.main()
