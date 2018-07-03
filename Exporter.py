@@ -46,10 +46,8 @@ class Exporter:
 
                 # export faces
                 obj_export.write(f'\n')
-                # for face in model._faces:
-                for f_id in range(len(model._faces)):
-                    face = model._faces[f_id]
-                    obj_export.write('f ' + ' '.join([f'{vid+1}//{f_id+1}' for vid in face._vids]) + '\n')
+                for face_id, face in enumerate(model._faces):
+                    obj_export.write('f ' + ' '.join([f'{vertex_id+1}//{face_id+1}' for vertex_id in face._vertex_ids]) + '\n')
 
                 print(f'Export: {filename} successfully written.')
         except:
@@ -83,7 +81,7 @@ class Exporter:
             face = model._faces[i]
             fh.write("facet normal %f %f %f\n" % tuple(face._norm[:3]))
             fh.write("  outer loop\n")
-            for v_id in face._vids:
+            for v_id in face._vertex_ids:
                 fh.write("    vertex %f %f %f\n" % tuple(model._vertices[v_id][:3]))
             fh.write('  endloop\n')
             fh.write('endfacet\n')

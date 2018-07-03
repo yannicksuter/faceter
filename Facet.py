@@ -10,7 +10,7 @@ class Facet(Model):
         verts_inner = []
         verts_top = []
 
-        for vid in face._vids:
+        for vid in face._vertex_ids:
             verts.append(model._vertices[vid])
             verts_inner.append(model._vertices[vid] + (-1. * brick_height * model._vertices_norm[vid]))
             verts_top.append(face._center + ((model._vertices[vid]-face._center) * top_size) - (face._norm * top_height))
@@ -24,7 +24,7 @@ class Facet(Model):
         # print(f'\n{top_size} :: {face_bottom[0].get_area()} <=> {face_top[0].get_area()}\n')
 
         # add sides
-        cnt = len(face._vids)
+        cnt = len(face._vertex_ids)
         for i in range(cnt):
             side_verts = []
             side_verts.append(verts[i])
