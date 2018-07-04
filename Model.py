@@ -175,6 +175,10 @@ class Model:
         """ Get size of bounding box """
         return np.absolute(self._bbox[1] - self._bbox[0])
 
+    def get_center(self):
+        """ Get size of bounding box """
+        return self._bbox[0] + self.get_size() * 0.5
+
     def get_faces_with_vertex_id(self, vertex_id):
         """ Get list of faces that use vertex (defined bt vertex_id) """
         faces = []
@@ -228,12 +232,12 @@ class Model:
     def triangulate(self):
         face_count_before = len(self._faces)
         for face in list(self._faces):
-            vert_count = len(face._vids)
+            vert_count = len(face._vertex_ids)
             if vert_count > 3:
                 self.remove_face(face)
                 for i in range(vert_count - 2):
-                    v_ids = [face._vids[0], face._vids[i+1], face._vids[i+2]]
-                    self.add_face([self._vertices[id] for id in v_ids])
+                    vertex_ids = [face._vertex_ids[0], face._vertex_ids[i+1], face._vertex_ids[i+2]]
+                    self.add_face([self._vertices[id] for id in vertex_ids])
         self._update()
         print(f'Triangulation: Face count {face_count_before} before -> {len(self._faces)} after')
 

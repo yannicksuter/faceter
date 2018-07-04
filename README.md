@@ -8,6 +8,5 @@ python 3.x
 pip install -r ./requirements.txt
 
 # WhereWasI
-* create facets
-* merge co-planar and adjacent faces
-* quantize (pixelate) 3d object
+* smarter plane selection to calculate offset
+* option to export shell as a volume when generating offset vertices

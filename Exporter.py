@@ -13,20 +13,12 @@ class Exporter:
         for vid in range(len(model._vertices)):
             vert = (rot_mtx.__matmul__(model._vertices[vid]))[0,:]
             model._vertices[vid] = np.asarray(vert).reshape(-1)
-        return model
 
     @staticmethod
-    def translate_model(model, ref_vec, to_vec=np.array([0., 0., 0.])):
-        t = to_vec - ref_vec
-        for vid in range(len(model._vertices)):
-            model._vertices[vid] -= t
-        return model
-
-    @staticmethod
-    def move_model(model, vec):
-        for vid in range(len(model._vertices)):
-            model._vertices[vid] -= vec
-        return model
+    def translate(model, v): #ref_vec, to_vec=np.array([0., 0., 0.])):
+        # t = to_vec - ref_vec
+        for idx, vertex in enumerate(model._vertices):
+            model._vertices[idx] += v
 
     @staticmethod
     def write_obj(model, export_filepath):
