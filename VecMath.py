@@ -3,6 +3,10 @@ import numpy as np
 EPSILON = 0.00001
 
 class VecMath:
+    _X = 0
+    _Y = 1
+    _Z = 2
+
     @staticmethod
     def unit_vector(vector):
         """ Returns the unit vector of the vector.  """
@@ -19,21 +23,6 @@ class VecMath:
     def dist_point_to_line(line_point, line_dir, point):
         """Calculate the distance of a point perpendicular to a line defined by line_point and dir."""
         return np.linalg.norm(np.abs(np.cross(line_dir, line_point - point) / np.linalg.norm(line_dir)))
-
-    # @staticmethod
-    # def dist_point_to_lin2(a, b, p):
-    # # two points define the line
-    # n = (b - a).normalized()
-    #
-    # ap = p - a
-    # t = ap.dot(n)
-    # x = a + t * n  # x is a point on line
-    # print("point on line  :", x)
-    # print("distance from p:", (p - x).length)
-    #
-    # # cross product for distance
-    # d = ap.cross(n).length
-    # print("dist cross prod:", d)
 
     @staticmethod
     def get_rotation_matrix(ref_vec, to_vec=np.array([1., 0., 0.])):
