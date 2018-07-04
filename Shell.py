@@ -32,8 +32,14 @@ def generate_shell(model, thickness):
         shell_vertices.append(offset_vertex)
 
     # build the shell geometry
-    for face in list(model._faces): # important to duplicate the list as we are modifing it while reading from it
-        model.add_face(reversed([shell_vertices[v_id] for v_id in face._vertex_ids]))
+    for face, dist in list(zip(model._faces, thickness)): # important to duplicate the list as we are modifing it while reading from it
+        if dist > 0.:
+            model.add_face(reversed([shell_vertices[v_id] for v_id in face._vertex_ids]))
+        else:
+            # remove face and close borders
+            model.remove_face(face)
+            for edge in face._edges:
+                model.add_face([model._vertices[edge.v0_id], model._vertices[edge.v1_id], shell_vertices[edge.v1_id], shell_vertices[edge.v0_id]])
     return model
 
 if __name__ == "__main__":
@@ -42,11 +48,14 @@ if __name__ == "__main__":
 
     import ObjLoader
     obj_data = ObjLoader.ObjLoader(f'./example/{obj_name}.obj')
-    obj_model = Model.load_fromdata(obj_data, scale=50.)
+    obj_model = Model.load_fromdata(obj_data, scale=40.)
     obj_model.simplify()
 
-    thickness = [.2 if i == 0. else 10 for i in range(len(obj_model._faces))]
-    # thickness = [10.] * len(obj_model._faces)
+    # thickness = [.2 if i == 0. else 10 for i in range(len(obj_model._faces))]
+    thickness = [5.] * len(obj_model._faces)
+    thickness[0] = .2 # bottom face is 'transparent'
+    thickness[5] = 0. # top face is removed
+
     obj_shell = generate_shell(obj_model, thickness)
 
     if obj_shell:
