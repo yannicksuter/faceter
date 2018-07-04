@@ -46,11 +46,10 @@ class Plane:
                 p[vm._X] = (other_plane._d * self._norm[vm._Y] - self._d * other_plane._norm[vm._Y]) / u[vm._Z]
                 p[vm._Y] = (self._d * other_plane._norm[vm._X] - other_plane._d * self._norm[vm._X]) / u[vm._Z]
 
-            return p, u
+            return [p, u]
+        return None
 
-            # https://github.com/bengolder/python-geometry/blob/master/geometry/plane.py
-
-    def intersect_with_ray(self, ray_dir, ray_start, epsilon=1e-6):
+    def intersect_with_ray(self, ray_start, ray_dir, epsilon=1e-6):
         ndotu = self._norm.dot(ray_dir)
         if abs(ndotu) < epsilon:
             raise RuntimeError("no intersection or ray is within plane")
