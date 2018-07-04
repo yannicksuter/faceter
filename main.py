@@ -30,9 +30,11 @@ if __name__ == "__main__":
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
 
         facet = Facet(ref_face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
-        thickness = [1.] * len(facet._faces)
+        thickness = [2.] * len(facet._faces)
+        visibility = [True] * len(obj_model._faces)
+
         thickness[0] = .2  # bottom face is 'transparent'
-        thickness[1] = 0.  # top face is removed
+        visibility[1] = False  # top face is removed
         facet = generate_shell(facet, thickness)
 
         # add facet to overview
