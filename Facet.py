@@ -40,6 +40,9 @@ class Facet(Model):
             top_side_verts.append(verts_top[i])
             self.add_face(top_side_verts)
 
+        #finalize model
+        self._update()
+
 if __name__ == "__main__":
     import ObjLoader
 

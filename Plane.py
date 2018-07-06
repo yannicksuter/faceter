@@ -19,7 +19,8 @@ class Plane:
         """ Return the angle in radians between this plane and another plane or vector """
         if isinstance(other, Plane):
             other_v = other._norm
-        elif isinstance(other, np.array) and len(other) == 3:
+        elif len(other) == 3:
+        # elif isinstance(other, np.array) and len(other) == 3:
             other_v = other
         return VecMath.angle_between(self._norm, other_v)
 

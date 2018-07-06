@@ -7,6 +7,14 @@ from Exporter import Exporter
 from Model import Model
 from Facet import Facet
 
+def export_centered(model, filename, orientation_vec=None):
+    model._update()
+    Exporter.translate(model, -model.get_center()) # center object
+    if orientation_vec:
+        Exporter.rotate_model(model, orientation_vec) # rotate for optimal printing
+    model._update()
+    Exporter.write_obj(model, filename)
+
 if __name__ == "__main__":
     obj_name = 'abstract'
 
@@ -29,22 +37,20 @@ if __name__ == "__main__":
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
 
         facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
-        facet.triangulate()
+        # facet.triangulate()
 
-        thickness = [3.] * len(facet._faces)
-        visibility = [True] * len(obj_model._faces)
-
+        thickness = [2.] * len(facet._faces)
+        visibility = [True] * len(facet._faces)
         thickness[0] = .2  # bottom face is 'transparent'
         # visibility[1] = False  # top face is removed
-        generate_shell(facet, thickness, visibility)
+
+        shell = generate_shell(facet, thickness, visibility)
+        export_centered(shell, f'./export/_{obj_name}_shell_{face_id+1}.obj', face._norm)
 
         # add facet to overview
         faceted_model.merge_model(facet)
 
         # export single part
-        Exporter.translate(facet, -facet.get_center()) # center object
-        Exporter.rotate_model(facet, face._norm) # rotate for optimal printing
-        facet._update()
-        Exporter.write_obj(facet, f'./export/_{obj_name}_part_{face_id+1}.obj', )
+        export_centered(facet, f'./export/_{obj_name}_part_{face_id+1}.obj', face._norm)
 
     Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj')
