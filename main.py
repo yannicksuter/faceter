@@ -10,7 +10,7 @@ from Facet import Facet
 def export_centered(model, filename, orientation_vec=None):
     model._update()
     Exporter.translate(model, -model.get_center()) # center object
-    if orientation_vec:
+    if orientation_vec is not None:
         Exporter.rotate_model(model, orientation_vec) # rotate for optimal printing
     model._update()
     Exporter.write_obj(model, filename)
@@ -37,7 +37,8 @@ if __name__ == "__main__":
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
 
         facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
-        # facet.triangulate()
+        facet.triangulate()
+        facet._update()
 
         thickness = [2.] * len(facet._faces)
         visibility = [True] * len(facet._faces)

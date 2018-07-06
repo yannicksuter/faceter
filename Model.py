@@ -162,14 +162,17 @@ class Model:
                     face._neighbour_faces.append(face_)
 
     def calculate_boundingbox(self):
-        self._bbox = [np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]]), np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]])]
-        for vert in self._vertices:
-            self._bbox[0][0] = min(self._bbox[0][0], vert[0])
-            self._bbox[0][1] = min(self._bbox[0][1], vert[1])
-            self._bbox[0][2] = min(self._bbox[0][2], vert[2])
-            self._bbox[1][0] = max(self._bbox[1][0], vert[0])
-            self._bbox[1][1] = max(self._bbox[1][1], vert[1])
-            self._bbox[1][2] = max(self._bbox[1][2], vert[2])
+        if len(self._vertices) > 0:
+            self._bbox = [np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]]), np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]])]
+            for vert in self._vertices:
+                self._bbox[0][0] = min(self._bbox[0][0], vert[0])
+                self._bbox[0][1] = min(self._bbox[0][1], vert[1])
+                self._bbox[0][2] = min(self._bbox[0][2], vert[2])
+                self._bbox[1][0] = max(self._bbox[1][0], vert[0])
+                self._bbox[1][1] = max(self._bbox[1][1], vert[1])
+                self._bbox[1][2] = max(self._bbox[1][2], vert[2])
+        else:
+            self._bbox = [np.array([0., 0., 0.]), np.array([0., 0., 0.])]
 
     def get_size(self):
         """ Get size of bounding box """
