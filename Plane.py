@@ -21,7 +21,7 @@ class Plane:
             other_v = other._norm
         elif isinstance(other, np.array) and len(other) == 3:
             other_v = other
-        return self._norm.angleTo(other_v)
+        return VecMath.angle_between(self._norm, other_v)
 
     def intersect_with_plane(self, other_plane, epsilon=1e-6):
         """Finds the intersection of this plane with another plane. """

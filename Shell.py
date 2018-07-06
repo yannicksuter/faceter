@@ -1,5 +1,16 @@
+import sys
 from Model import Model
 from Plane import Plane
+
+def get_min_angle_plane(vector, planes, exclude=None):
+    min_angle = sys.float_info.max
+    min_idx = None
+    for idx, plane in enumerate(planes):
+        angle_between = plane.angle_between(vector)
+        if angle_between > 0 and angle_between < min_angle:
+            min_idx = idx
+            min_angle = angle_between
+    return planes[min_idx]
 
 def calculate_offset_vertex(vertex, faces, thickness):
     # no connected faces
@@ -17,9 +28,12 @@ def calculate_offset_vertex(vertex, faces, thickness):
             planes.append(Plane(face.get_vertex(0) - face._norm * thickness[face._id], -face._norm))
 
         ref_plane = planes[0]
-        intersection_line = ref_plane.intersect_with_plane(planes[1])
+        ref_plane2 = get_min_angle_plane(planes[0]._norm, planes)
+
+        intersection_line = ref_plane.intersect_with_plane(ref_plane2)
         if intersection_line is not None:
-            return planes[2].intersect_with_ray(intersection_line[0], intersection_line[1])
+            ref_plane3 = get_min_angle_plane(intersection_line[1], planes, exclude=[ref_plane, ref_plane2])
+            return ref_plane3.intersect_with_ray(intersection_line[0], intersection_line[1])
 
 def generate_shell(model, thickness, visibility):
     """ Duplicate a surface and offsets it by thickness"""
