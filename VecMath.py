@@ -20,6 +20,10 @@ class VecMath:
         return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
     @staticmethod
+    def dist_point_to_point(p1, p2):
+        return np.linalg.norm(p2 - p1)
+
+    @staticmethod
     def dist_point_to_line(line_point, line_dir, point):
         """Calculate the distance of a point perpendicular to a line defined by line_point and dir."""
         return np.linalg.norm(np.abs(np.cross(line_dir, line_point - point) / np.linalg.norm(line_dir)))
