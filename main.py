@@ -26,7 +26,7 @@ if __name__ == "__main__":
     bbox_size = obj_model.get_size()
     print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
-    target_lid_size = 120. #mm^2
+    target_lid_size = 100. #mm^2
 
     faceted_model = Model()
     for face_id, face in enumerate(obj_model._faces):
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         face_surface = face.get_area()
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
 
-        facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
+        facet = Facet(face, obj_model, brick_height=15., top_height=20., top_size=ttop_size)
         facet.triangulate()
         facet._update()
 
@@ -46,7 +46,8 @@ if __name__ == "__main__":
         # visibility[1] = False  # top face is removed
 
         shell = generate_shell(facet, thickness, visibility)
-        export_centered(shell, f'./export/_{obj_name}_shell_{face_id+1}.obj', face._norm)
+        Exporter.write_obj(facet, f'./export/_{obj_name}_shell_{face_id+1}.obj')
+        # export_centered(shell, f'./export/_{obj_name}_shell_{face_id+1}.obj', face._norm)
 
         # add facet to overview
         faceted_model.merge_model(facet)

@@ -4,8 +4,9 @@ from VecMath import VecMath as vm
 
 
 class Plane:
-    def __init__(self, point, norm):
+    def __init__(self, point, norm, ref_id=None):
         """ Create a new plane from a point on the plane and it's normal """
+        self._ref_id = ref_id
         self._point = point
         self._norm = norm
         self._d = -(np.dot(self._norm, self._point))

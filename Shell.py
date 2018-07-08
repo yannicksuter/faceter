@@ -4,6 +4,7 @@ from Model import Model
 from Plane import Plane
 
 def get_first_plane(vertex, faces):
+    """ First plane: Find the plane which center is closest to the vertex """
     min_dist = sys.float_info.max
     min_idx = None
     for idx, face in enumerate(faces):
@@ -11,32 +12,34 @@ def get_first_plane(vertex, faces):
         if dist < min_dist:
             min_idx = idx
             min_dist = dist
-    print(f'ref_plane #1: {min_idx}')
+    # print(f'ref_plane #1: {min_idx} -> ref: {faces[min_idx]._id}')
     return min_idx
 
-def get_second_plane(vector, planes, exclude_planes, epsilon=1e-6):
-    min_angle = sys.float_info.max
+def get_second_plane(vector, planes, exclude_planes):
+    """ Second plane: Find the plane with the smallest angle between the normal vectors """
+    min_angle = 0
     min_idx = None
     for idx, plane in enumerate(planes):
         if plane not in exclude_planes:
-            angle_between = plane.angle_between(vector)
-            if angle_between > epsilon and angle_between < min_angle:
+            angle_between = abs(plane.angle_between(vector))
+            if angle_between > min_angle:
                 min_idx = idx
                 min_angle = angle_between
-    print(f'ref_plane #2: {min_idx}')
-    return planes[min_idx]
+    # print(f'ref_plane #2: {min_idx} -> ref: {planes[min_idx]._ref_id}')
+    return min_idx
 
 def get_third_plane(vector, planes, exclude_planes):
+    """ Thirst plane: Find the plane with the smallest angle with its normal and the ray-dir """
     min_angle = sys.float_info.max
     min_idx = None
     for idx, plane in enumerate(planes):
         if plane not in exclude_planes:
-            angle_between = plane.angle_between(vector)
+            angle_between = min(abs(plane.angle_between(vector)),abs(plane.angle_between(-vector)))
             if angle_between < min_angle:
                 min_idx = idx
                 min_angle = angle_between
-    print(f'ref_plane #3: {min_idx}')
-    return planes[min_idx]
+    # print(f'ref_plane #3: {min_idx} -> ref: {planes[min_idx]._ref_id}')
+    return min_idx
 
 def calculate_offset_vertex(vertex, connected_faces, thickness):
     # no connected faces
@@ -51,14 +54,14 @@ def calculate_offset_vertex(vertex, connected_faces, thickness):
     else:
         planes = []
         for face in connected_faces:
-            planes.append(Plane(face.get_vertex(0) - face._norm * thickness[face._id], -face._norm))
+            planes.append(Plane(face.get_vertex(0) - face._norm * thickness[face._id], -face._norm, ref_id=face._id))
 
         ref_plane1 = planes[get_first_plane(vertex, connected_faces)]
-        ref_plane2 = get_second_plane(ref_plane1._norm, planes, [ref_plane1])
+        ref_plane2 = planes[get_second_plane(ref_plane1._norm, planes, [ref_plane1])]
 
         intersection_line = ref_plane1.intersect_with_plane(ref_plane2)
         if intersection_line is not None:
-            ref_plane3 = get_third_plane(intersection_line[1], planes, [ref_plane1, ref_plane2])
+            ref_plane3 = planes[get_third_plane(intersection_line[1], planes, [ref_plane1, ref_plane2])]
             return ref_plane3.intersect_with_ray(intersection_line[0], intersection_line[1])
 
 def generate_shell(model, thickness, visibility):
@@ -72,8 +75,9 @@ def generate_shell(model, thickness, visibility):
     shell_vertices = []
     for idx, vertex in enumerate(model._vertices):
         connected_faces = model.get_faces_with_vertex_id(idx)
-        print(f'vertex[{idx}]: {len(connected_faces)} connected faces')
+        # print(f'vertex[{idx}]: {len(connected_faces)} connected faces')
         offset_vertex = calculate_offset_vertex(vertex, connected_faces, thickness)
+        # print(f'offset vertex: {offset_vertex[0]}, {offset_vertex[1]}, {offset_vertex[2]}')
         shell_vertices.append(offset_vertex)
 
     # build the shell geometry

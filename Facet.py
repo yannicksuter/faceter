@@ -22,7 +22,6 @@ class Facet(Model):
         verts_top = list(reversed(verts_top))
 
         face_top = self.add_face(verts_inner)
-
         # face_top = self.add_face(verts_top)
         # print(f'\n{top_size} :: {face_bottom[0].get_area()} <=> {face_top[0].get_area()}\n')
 

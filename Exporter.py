@@ -30,11 +30,11 @@ class Exporter:
                 # export vertices
                 obj_export.write(f'\n')
                 for vert in model._vertices:
-                    obj_export.write('v %.3f %.3f %.3f\n' % tuple(vert[:3]))
+                    obj_export.write('v %.4f %.4f %.4f\n' % tuple(vert[:3]))
 
                 obj_export.write(f'\n')
                 for face in model._faces:
-                    obj_export.write('vn %.3f %.3f %.3f\n' % tuple(face._norm[:3]))
+                    obj_export.write('vn %.4f %.4f %.4f\n' % tuple(face._norm[:3]))
 
                 # export faces
                 obj_export.write(f'\n')
