@@ -10,9 +10,11 @@ from Facet import Facet
 def export_centered(model, filename, orientation_vec=None):
     model._update()
     Exporter.translate(model, -model.get_center()) # center object
+    model._update()
     if orientation_vec is not None:
         Exporter.rotate_model(model, orientation_vec) # rotate for optimal printing
     model._update()
+    # Exporter.write_obj(model, filename, offset=-model.get_center())
     Exporter.write_obj(model, filename)
 
 if __name__ == "__main__":
@@ -36,18 +38,15 @@ if __name__ == "__main__":
         face_surface = face.get_area()
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
 
-        facet = Facet(face, obj_model, brick_height=15., top_height=20., top_size=ttop_size)
+        facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
         facet.triangulate()
         facet._update()
 
         thickness = [2.] * len(facet._faces)
         visibility = [True] * len(facet._faces)
         thickness[0] = .2  # bottom face is 'transparent'
-        # visibility[1] = False  # top face is removed
-
-        shell = generate_shell(facet, thickness, visibility)
-        Exporter.write_obj(facet, f'./export/_{obj_name}_shell_{face_id+1}.obj')
-        # export_centered(shell, f'./export/_{obj_name}_shell_{face_id+1}.obj', face._norm)
+        visibility[1] = False  # top face is removed
+        generate_shell(facet, thickness, visibility)
 
         # add facet to overview
         faceted_model.merge_model(facet)
@@ -55,4 +54,5 @@ if __name__ == "__main__":
         # export single part
         export_centered(facet, f'./export/_{obj_name}_part_{face_id+1}.obj', face._norm)
 
-    Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj')
+    faceted_model._update()
+    Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj', -faceted_model.get_center())

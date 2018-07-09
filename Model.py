@@ -216,7 +216,8 @@ class Model:
 
     def merge_model(self, model):
         for face in model._faces:
-            self.add_face([model._vertices[vid] for vid in face._vertex_ids])
+            self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids])
+        self._update()
 
     def simplify(self):
         face_count_before = len(self._faces)

@@ -21,8 +21,8 @@ class Facet(Model):
         verts_inner = list(reversed(verts_inner))
         verts_top = list(reversed(verts_top))
 
-        face_top = self.add_face(verts_inner)
-        # face_top = self.add_face(verts_top)
+        # face_top = self.add_face(verts_inner)
+        face_top = self.add_face(verts_top)
         # print(f'\n{top_size} :: {face_bottom[0].get_area()} <=> {face_top[0].get_area()}\n')
 
         # add sides
@@ -35,12 +35,12 @@ class Facet(Model):
             side_verts.append(verts_inner[i])
             self.add_face(side_verts)
 
-            # top_side_verts = []
-            # top_side_verts.append(verts_inner[i])
-            # top_side_verts.append(verts_inner[(i+1)%cnt])
-            # top_side_verts.append(verts_top[(i+1)%cnt])
-            # top_side_verts.append(verts_top[i])
-            # self.add_face(top_side_verts)
+            top_side_verts = []
+            top_side_verts.append(verts_inner[i])
+            top_side_verts.append(verts_inner[(i+1)%cnt])
+            top_side_verts.append(verts_top[(i+1)%cnt])
+            top_side_verts.append(verts_top[i])
+            self.add_face(top_side_verts)
 
         #finalize model
         self._update()

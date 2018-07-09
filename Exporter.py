@@ -16,12 +16,11 @@ class Exporter:
 
     @staticmethod
     def translate(model, v): #ref_vec, to_vec=np.array([0., 0., 0.])):
-        # t = to_vec - ref_vec
         for idx, vertex in enumerate(model._vertices):
-            model._vertices[idx] += v
+            model._vertices[idx] = np.array(vertex+v)
 
     @staticmethod
-    def write_obj(model, export_filepath):
+    def write_obj(model, export_filepath, offset=None):
         try:
             path, filename = os.path.split(export_filepath)
             with open(export_filepath, 'w') as obj_export:
@@ -30,7 +29,10 @@ class Exporter:
                 # export vertices
                 obj_export.write(f'\n')
                 for vert in model._vertices:
-                    obj_export.write('v %.4f %.4f %.4f\n' % tuple(vert[:3]))
+                    v = vert.copy()
+                    if offset is not None:
+                        v += offset
+                    obj_export.write('v %.4f %.4f %.4f\n' % tuple(v[:3]))
 
                 obj_export.write(f'\n')
                 for face in model._faces:
@@ -41,9 +43,9 @@ class Exporter:
                 for face_id, face in enumerate(model._faces):
                     obj_export.write('f ' + ' '.join([f'{vertex_id+1}//{face_id+1}' for vertex_id in face._vertex_ids]) + '\n')
 
-                print(f'Export: {filename} successfully written.')
+                print(f'Export: {filename} written. (Vertices: {len(model._vertices)} Faces: {len(model._faces)})')
         except:
-            print("Export: .obj file could not be written.")
+            print(f'Export: {export_filepath} file could not be written.')
 
     STL_AUTO = 0
     STL_ASCII = 1
