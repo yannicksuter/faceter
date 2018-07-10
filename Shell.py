@@ -81,18 +81,17 @@ def generate_shell(model, thickness, visibility):
         shell_vertices.append(offset_vertex)
 
     # build the shell geometry
-    shell = Model()
     for face, visible in list(zip(model._faces, visibility)): # important to duplicate the list as we are modifing it while reading from it
         if visible:
             # model.add_face(reversed([shell_vertices[v_id] for v_id in face._vertex_ids]))
             model.add_face([shell_vertices[v_id] for v_id in face._vertex_ids])
-            shell.add_face([shell_vertices[v_id].copy() for v_id in face._vertex_ids])
         else:
             # remove face and close borders
             model.remove_face(face)
             for edge in face._edges:
                 model.add_face([model._vertices[edge.v0_id], model._vertices[edge.v1_id], shell_vertices[edge.v1_id], shell_vertices[edge.v0_id]])
-    return shell
+
+    model._update()
 
 if __name__ == "__main__":
 
@@ -108,8 +107,7 @@ if __name__ == "__main__":
     thickness[0] = .2 # bottom face is 'transparent'
     visibility[5] = False # top face is removed
 
-    obj_shell = generate_shell(obj_model, thickness, visibility)
+    generate_shell(obj_model, thickness, visibility)
 
-    if obj_shell:
-        from Exporter import Exporter
-        Exporter.write_obj(obj_shell, f'./export/_{obj_name}_shell.obj')
+    from Exporter import Exporter
+    Exporter.write_obj(obj_model, f'./export/_{obj_name}_shell.obj')

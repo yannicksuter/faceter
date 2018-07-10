@@ -21,7 +21,7 @@ if __name__ == "__main__":
     obj_name = 'abstract'
 
     obj_data = ObjLoader.ObjLoader(f'./example/{obj_name}.obj')
-    obj_model = Model.load_fromdata(obj_data, scale=1.)
+    obj_model = Model.load_fromdata(obj_data, scale=1.5)
 
     print(f'Faces: {len(obj_model._faces)}')
     print(f'Vertices: {len(obj_model._vertices)}')
