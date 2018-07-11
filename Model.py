@@ -106,6 +106,12 @@ class Face:
                         v_ids.append(insert_edge.v1_id)
         return v_ids
 
+class Group:
+    def __init__(self, model):
+        self._model = model
+        self._faces = []
+        self._bbox = [np.array([0., 0., 0.]), np.array([0., 0., 0.])]
+
 class Model:
     def __init__(self):
         self._name = 'unknown'
