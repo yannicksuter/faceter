@@ -3,6 +3,26 @@ import numpy as np
 from VecMath import VecMath
 from Model import *
 
+def write_obj_vertices(file, model, vertex_offset):
+    """Write vertices to obj file"""
+    file.write(f'\n')
+    for vert in model._vertices:
+        v = vert.copy()
+        if vertex_offset is not None:
+            v += vertex_offset
+        file.write('v %.4f %.4f %.4f\n' % tuple(v[:3]))
+
+def write_obj_normals(file, model):
+    """Write vertex normals to obj file"""
+    file.write(f'\n')
+    for face in model._faces:
+        file.write('vn %.4f %.4f %.4f\n' % tuple(face._norm[:3]))
+
+def write_obj_facegroup(file, model, group):
+    file.write(f'\ng {group._name}\n')
+    for face_id, face in enumerate(group._faces):
+        file.write('f ' + ' '.join([f'{vertex_id+1}//{face._id+1}' for vertex_id in face._vertex_ids]) + '\n')
+
 class Exporter:
     def __init__(self, model, export_filepath):
         pass
@@ -24,27 +44,29 @@ class Exporter:
         try:
             path, filename = os.path.split(export_filepath)
             with open(export_filepath, 'w') as obj_export:
-                obj_export.write(f'# {filename}\n#\n\ng {model._name}\n')
-
-                # export vertices
-                obj_export.write(f'\n')
-                for vert in model._vertices:
-                    v = vert.copy()
-                    if offset is not None:
-                        v += offset
-                    obj_export.write('v %.4f %.4f %.4f\n' % tuple(v[:3]))
-
-                obj_export.write(f'\n')
-                for face in model._faces:
-                    obj_export.write('vn %.4f %.4f %.4f\n' % tuple(face._norm[:3]))
-
-                # export faces
+                obj_export.write(f'# {filename}\n#\n')
+                write_obj_vertices(obj_export, model, offset)
+                write_obj_normals(obj_export, model)
                 for group in model._groups:
-                    obj_export.write(f'\ng {group._name}\n')
-                    for face_id, face in enumerate(group._faces):
-                        obj_export.write('f ' + ' '.join([f'{vertex_id+1}//{face_id+1}' for vertex_id in face._vertex_ids]) + '\n')
-
+                    write_obj_facegroup(obj_export, model, group)
                 print(f'Export: {filename} written. (Vertices: {len(model._vertices)} Faces: {len(model._faces)})')
+        except:
+            print(f'Export: {export_filepath} file could not be written.')
+
+    @staticmethod
+    def write_obj_split(model, export_filepath, offset=None):
+        try:
+            path, filename = os.path.split(export_filepath)
+            filename, ext = os.path.splitext(filename)
+
+            for group in model._groups:
+                filename_group = os.path.join(path, f'{filename}_{group._name}{ext}')
+                with open(filename_group, 'w') as obj_export:
+                    obj_export.write(f'# {filename}\n#\n')
+                    write_obj_vertices(obj_export, model, offset)
+                    write_obj_normals(obj_export, model)
+                    write_obj_facegroup(obj_export, model, group)
+                    print(f'Export: {filename_group} written. (Vertices: {len(model._vertices)} Faces: {len(group._faces)})')
         except:
             print(f'Export: {export_filepath} file could not be written.')
 
@@ -97,3 +119,4 @@ if __name__ == "__main__":
         obj_model.add_face(vertices)
 
     Exporter.write_obj(obj_model, './export/_cube.obj')
+    Exporter.write_obj_split(obj_model, './export/_cube.obj')
