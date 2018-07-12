@@ -39,9 +39,10 @@ class Exporter:
                     obj_export.write('vn %.4f %.4f %.4f\n' % tuple(face._norm[:3]))
 
                 # export faces
-                obj_export.write(f'\n')
-                for face_id, face in enumerate(model._faces):
-                    obj_export.write('f ' + ' '.join([f'{vertex_id+1}//{face_id+1}' for vertex_id in face._vertex_ids]) + '\n')
+                for group in model._groups:
+                    obj_export.write(f'\ng {group._name}\n')
+                    for face_id, face in enumerate(group._faces):
+                        obj_export.write('f ' + ' '.join([f'{vertex_id+1}//{face_id+1}' for vertex_id in face._vertex_ids]) + '\n')
 
                 print(f'Export: {filename} written. (Vertices: {len(model._vertices)} Faces: {len(model._faces)})')
         except:
@@ -87,5 +88,12 @@ if __name__ == "__main__":
     obj_model = Model.load_fromdata(obj_data)
 
     obj_model.simplify()
+
+    obj_model.add_group('cube2')
+    for face in list(obj_model._faces):
+        vertices = []
+        for idx in face._vertex_ids:
+            vertices.append(obj_model._vertices[idx] + obj_model.get_size())
+        obj_model.add_face(vertices)
 
     Exporter.write_obj(obj_model, './export/_cube.obj')

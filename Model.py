@@ -166,6 +166,7 @@ class Model:
 
     def add_group(self, name):
         """Add new group and set it as cur_group."""
+        name = name.replace(' ', '_')
         self._cur_group = Group(self, name)
         self._groups.append(self._cur_group)
 
