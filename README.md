@@ -2,7 +2,6 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
-* add tag to face, to identify certain structures
 * matrix math (translation, rotation, ..) and optimize some export functions 
 * add contours/glyphs with extrude functionality
 * adapt integrated 3d visualizer to render model-class objects

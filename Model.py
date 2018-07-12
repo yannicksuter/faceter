@@ -28,12 +28,13 @@ class Edge:
         return None
 
 class Face:
-    def __init__(self, model, group, vertex_ids):
+    def __init__(self, model, group, vertex_ids, tag=None):
         if DEBUG:
             print(f'FACE: {vertex_ids}')
 
         self._model = model
         self._group =group
+        self._tag = tag
         self._vertex_ids = vertex_ids
         self._edges = []
         self._neighbour_faces = []
@@ -147,6 +148,9 @@ class Group:
                 bbox[1][2] = max(bbox[1][2], vertex[2])
         return bbox
 
+    def get_faces_by_tag(self, tag):
+        return [face for face in self._faces if face._tag == tag]
+
 class Model:
     def __init__(self):
         self._name = 'unknown'
@@ -202,9 +206,12 @@ class Model:
         model = Model()
         model.set_group(group._name)
         for face in group._faces:
-            model.add_face([self._vertices[vid].copy() for vid in face._vertex_ids])
+            model.add_face([self._vertices[vid].copy() for vid in face._vertex_ids], tag=face._tag)
         model._update()
         return model
+
+    def get_faces_by_tag(self, tag):
+        return [face for face in self._faces if face._tag == tag]
 
     def calculate_centers(self):
         for face in self._faces:
@@ -269,7 +276,7 @@ class Model:
                 return vid
         return None
 
-    def add_face(self, vertices, group=None):
+    def add_face(self, vertices, tag=None, group=None):
         vertex_ids = []
         for vertex in vertices:
             vid = self.get_vertId(vertex)
@@ -284,7 +291,7 @@ class Model:
                 self.set_group("default")
             group = self._cur_group
 
-        face = Face(self, group, vertex_ids)
+        face = Face(self, group, vertex_ids, tag)
         self._faces.append(face)
         return face
 
@@ -297,7 +304,7 @@ class Model:
         if group_name is not None:
             self.set_group(group_name)
         for face in model._faces:
-            self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids])
+            self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids], face._tag)
         self._update()
 
     def simplify(self):

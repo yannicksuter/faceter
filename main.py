@@ -45,8 +45,10 @@ if __name__ == "__main__":
         model = faceted_model.get_group_model(group)
         thickness = [2.] * len(model._faces)
         visibility = [True] * len(model._faces)
-        thickness[0] = .2  # bottom face is 'transparent'
-        visibility[1] = False  # top face is removed
+        for face in model.get_faces_by_tag('bottom'):
+            thickness[face._id] = .2  # bottom face is 'transparent'
+        for face in model.get_faces_by_tag('top'):
+            visibility[face._id] = False  # top face is removed
         generate_shell(model, thickness, visibility)
         export_centered(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 
