@@ -54,6 +54,15 @@ class TestModel(unittest.TestCase):
         obj_model.simplify()
         self.assertEqual(len(obj_model._faces), 6)
 
+    def test_simplify_cube(self):
+        obj_data = ObjLoader.ObjLoader('../example/cube.obj')
+        obj_model = Model.load_fromdata(obj_data)
+        obj_model.simplify()
+
+        self.assertTrue(obj_model._faces[0].is_equal([0,2,6,4]))
+        self.assertTrue(obj_model._faces[0].is_equal([6,4,0,2]))
+        self.assertFalse(obj_model._faces[0].is_equal([0,1,2,3]))
+
     def test_cube_bbox(self):
         obj_data = ObjLoader.ObjLoader('../example/cube.obj')
         obj_model = Model.load_fromdata(obj_data)

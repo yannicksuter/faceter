@@ -70,6 +70,21 @@ class Face:
                 return True
         return False
 
+    def is_equal(self, vertex_ids):
+        """Returns True if passed vertex_ids define the same face"""
+        if not self.contains_vertex_id(vertex_ids[0]):
+            return False
+
+        offset = None
+        for idx, vertex_id in enumerate(self._vertex_ids):
+            if vertex_id == vertex_ids[0]:
+                offset = idx
+
+        for i in range(len(vertex_ids)):
+            if vertex_ids[i] != self._vertex_ids[(i+offset) % len(self._vertex_ids)]:
+                return False
+        return True
+
     def is_neighbour(self, face):
         """ Returns True if face is neighbouring the current face """
         for edge in self._edges:
@@ -153,7 +168,7 @@ class Model:
 
         cls._faces = []
         for group in obj_data._groups:
-            cls.add_group(group[0])
+            cls.set_group(group[0])
             for face_data in group[1]:
                 vertex_ids = []
                 for f_id, t_id, n_id in face_data:
@@ -165,18 +180,31 @@ class Model:
         return cls
 
     def add_group(self, name):
-        """Add new group and set it as cur_group."""
+        """Add and return new group or will return existing group"""
         name = name.replace(' ', '_')
-        self._cur_group = Group(self, name)
-        self._groups.append(self._cur_group)
+        group = None
+        for g in self._groups:
+            if name == g._name:
+                group = g
+        if group is None:
+            group = Group(self, name)
+            self._groups.append(group)
+        return group
 
     def set_group(self, name):
         """Set active group by name."""
-        for group in self._groups:
-            if name == group._name:
-                self._cur_group = group
-                return True
-        return False
+        self._cur_group = self.add_group(name)
+
+    def delete_group(self, group):
+        raise NotImplementedError
+
+    def get_group_model(self, group):
+        model = Model()
+        model.set_group(group._name)
+        for face in group._faces:
+            model.add_face([self._vertices[vid].copy() for vid in face._vertex_ids])
+        model._update()
+        return model
 
     def calculate_centers(self):
         for face in self._faces:
@@ -226,12 +254,13 @@ class Model:
         """ Get size of bounding box """
         return self._bbox[0] + self.get_size() * 0.5
 
-    def get_faces_with_vertex_id(self, vertex_id):
+    def get_faces_with_vertex_id(self, vertex_id, in_group=None):
         """ Get list of faces that use vertex (defined bt vertex_id) """
         faces = []
         for face in self._faces:
             if face.contains_vertex_id(vertex_id):
-                faces.append(face)
+                if in_group==face._group or in_group is None:
+                    faces.append(face)
         return faces
 
     def get_vertId(self, vertex):
@@ -252,8 +281,7 @@ class Model:
         # face group
         if group == None:
             if self._cur_group == None:
-                # create default group
-                self.add_group("default")
+                self.set_group("default")
             group = self._cur_group
 
         face = Face(self, group, vertex_ids)
@@ -265,7 +293,9 @@ class Model:
         if face in self._faces:
             self._faces.remove(face)
 
-    def merge_model(self, model):
+    def merge_model(self, model, group_name=None):
+        if group_name is not None:
+            self.set_group(group_name)
         for face in model._faces:
             self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids])
         self._update()
@@ -286,14 +316,25 @@ class Model:
 
     def triangulate(self):
         face_count_before = len(self._faces)
+
+        # preprocess faces to find duplicates, in order to handle triangulation the same way / order!
+        rev_triangulation = [False] * face_count_before
+        for idx, face in enumerate(self._faces):
+            for idx2, face2 in enumerate(self._faces):
+                if  idx2 < idx and face2.is_equal(list(reversed(face._vertex_ids))):
+                    rev_triangulation[idx] = True
+
         # triangulate
-        for face in list(self._faces):
+        for face_idx, face in enumerate(list(self._faces)):
             vert_count = len(face._vertex_ids)
             if vert_count > 3:
                 self.remove_face(face)
                 for i in range(vert_count - 2):
-                    vertex_ids = [face._vertex_ids[0], face._vertex_ids[i+1], face._vertex_ids[i+2]]
-                    self.add_face([self._vertices[id] for id in vertex_ids])
+                    offset = 0
+                    if rev_triangulation[face_idx]:
+                        offset = 1
+                    vertex_ids = [face._vertex_ids[0+offset], face._vertex_ids[(i+1+offset) % vert_count], face._vertex_ids[(i+2+offset) % vert_count]]
+                    self.add_face([self._vertices[id] for id in vertex_ids], group=face._group)
         self._update()
         print(f'Triangulation: Face count {face_count_before} before -> {len(self._faces)} after')
 

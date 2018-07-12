@@ -29,30 +29,25 @@ if __name__ == "__main__":
     print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
     target_lid_size = 100. #mm^2
-
     faceted_model = Model()
+
     for face_id, face in enumerate(obj_model._faces):
         print(f'processing facet #{face_id}')
-
-        # calculate scale factor to get a constant lid size
         face_surface = face.get_area()
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
-
         facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
-        facet.triangulate()
-        facet._update()
+        faceted_model.merge_model(facet, group_name=f'facet_{face_id}')
 
-        thickness = [2.] * len(facet._faces)
-        visibility = [True] * len(facet._faces)
+    faceted_model.triangulate()
+    faceted_model._update()
+
+    for idx, group in enumerate(faceted_model._groups):
+        model = faceted_model.get_group_model(group)
+        thickness = [2.] * len(model._faces)
+        visibility = [True] * len(model._faces)
         thickness[0] = .2  # bottom face is 'transparent'
         visibility[1] = False  # top face is removed
-        generate_shell(facet, thickness, visibility)
+        generate_shell(model, thickness, visibility)
+        export_centered(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 
-        # add facet to overview
-        faceted_model.merge_model(facet)
-
-        # export single part
-        export_centered(facet, f'./export/_{obj_name}_part_{face_id+1}.obj', face._norm)
-
-    faceted_model._update()
     Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj', -faceted_model.get_center())
