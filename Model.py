@@ -28,11 +28,12 @@ class Edge:
         return None
 
 class Face:
-    def __init__(self, model, vertices, vertex_ids):
+    def __init__(self, model, group, vertex_ids):
         if DEBUG:
             print(f'FACE: {vertex_ids}')
 
         self._model = model
+        self._group =group
         self._vertex_ids = vertex_ids
         self._edges = []
         self._neighbour_faces = []
@@ -40,15 +41,15 @@ class Face:
         for i in range(len(vertex_ids)):
             v0_id = vertex_ids[i]
             v1_id = vertex_ids[(i + 1) % len(vertex_ids)]
-            self._edges.append(Edge(v0_id, v1_id, np.linalg.norm(vertices[v1_id]-vertices[v0_id])))
+            self._edges.append(Edge(v0_id, v1_id, np.linalg.norm(self._model._vertices[v1_id]-self._model._vertices[v0_id])))
 
         # face normal vector
-        self.calculate_norm(vertices)
+        self.calculate_norm(self._model._vertices)
 
         # face center
         self._center = np.array([0., 0., 0.])
         for vid in self._vertex_ids:
-            self._center += vertices[vid]
+            self._center += self._model._vertices[vid]
         self._center /= float(len(self._vertex_ids))
 
     def calculate_norm(self, vertices):
@@ -107,15 +108,36 @@ class Face:
         return v_ids
 
 class Group:
-    def __init__(self, model):
+    def __init__(self, model, name):
         self._model = model
-        self._faces = []
-        self._bbox = [np.array([0., 0., 0.]), np.array([0., 0., 0.])]
+        self._name = name
+
+    @property
+    def _faces(self):
+        """Return all faces belonging to the group"""
+        return [face for face in self._model._faces if face._group == self]
+
+    @property
+    def _bbox(self):
+        """Get bounding box for group"""
+        bbox = [np.array([0., 0., 0.]), np.array([0., 0., 0.])]
+        for face in self._faces:
+            for idx in face._vertex_ids:
+                vertex = self._model._vertices[idx]
+                bbox[0][0] = min(bbox[0][0], vertex[0])
+                bbox[0][1] = min(bbox[0][1], vertex[1])
+                bbox[0][2] = min(bbox[0][2], vertex[2])
+                bbox[1][0] = max(bbox[1][0], vertex[0])
+                bbox[1][1] = max(bbox[1][1], vertex[1])
+                bbox[1][2] = max(bbox[1][2], vertex[2])
+        return bbox
 
 class Model:
     def __init__(self):
         self._name = 'unknown'
         self._vertices = []
+        self._groups = []
+        self._cur_group = None
         self._faces = []
         self._vertices_norm = []
         self._bbox = [np.array([0.,0.,0.]), np.array([0.,0.,0.])]
@@ -126,19 +148,34 @@ class Model:
         cls._name = 'unknown'
 
         cls._vertices = []
-        for v in obj_data.vertices:
+        for v in obj_data._vertices:
             cls._vertices.append(np.array(v)*scale)
 
         cls._faces = []
-        for face_data in obj_data.faces:
-            vertex_ids = []
-            for f_id, t_id, n_id in face_data:
-                f_id -= 1
-                vertex_ids.append(f_id)
-            cls._faces.append(Face(cls, cls._vertices, vertex_ids))
+        for group in obj_data._groups:
+            cls.add_group(group[0])
+            for face_data in group[1]:
+                vertex_ids = []
+                for f_id, t_id, n_id in face_data:
+                    f_id -= 1
+                    vertex_ids.append(f_id)
+                cls._faces.append(Face(cls, cls._cur_group, vertex_ids))
 
         cls._update()
         return cls
+
+    def add_group(self, name):
+        """Add new group and set it as cur_group."""
+        self._cur_group = Group(self, name)
+        self._groups.append(self._cur_group)
+
+    def set_group(self, name):
+        """Set active group by name."""
+        for group in self._groups:
+            if name == group._name:
+                self._cur_group = group
+                return True
+        return False
 
     def calculate_centers(self):
         for face in self._faces:
@@ -170,13 +207,13 @@ class Model:
     def calculate_boundingbox(self):
         if len(self._vertices) > 0:
             self._bbox = [np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]]), np.array([self._vertices[0][0],self._vertices[0][1],self._vertices[0][2]])]
-            for vert in self._vertices:
-                self._bbox[0][0] = min(self._bbox[0][0], vert[0])
-                self._bbox[0][1] = min(self._bbox[0][1], vert[1])
-                self._bbox[0][2] = min(self._bbox[0][2], vert[2])
-                self._bbox[1][0] = max(self._bbox[1][0], vert[0])
-                self._bbox[1][1] = max(self._bbox[1][1], vert[1])
-                self._bbox[1][2] = max(self._bbox[1][2], vert[2])
+            for vertex in self._vertices:
+                self._bbox[0][0] = min(self._bbox[0][0], vertex[0])
+                self._bbox[0][1] = min(self._bbox[0][1], vertex[1])
+                self._bbox[0][2] = min(self._bbox[0][2], vertex[2])
+                self._bbox[1][0] = max(self._bbox[1][0], vertex[0])
+                self._bbox[1][1] = max(self._bbox[1][1], vertex[1])
+                self._bbox[1][2] = max(self._bbox[1][2], vertex[2])
         else:
             self._bbox = [np.array([0., 0., 0.]), np.array([0., 0., 0.])]
 
@@ -202,7 +239,7 @@ class Model:
                 return vid
         return None
 
-    def add_face(self, vertices):
+    def add_face(self, vertices, group=None):
         vertex_ids = []
         for vertex in vertices:
             vid = self.get_vertId(vertex)
@@ -211,7 +248,14 @@ class Model:
                 self._vertices.append(vertex)
             vertex_ids.append(vid)
 
-        face = Face(self, self._vertices, vertex_ids)
+        # face group
+        if group == None:
+            if self._cur_group == None:
+                # create default group
+                self.add_group("default")
+            group = self._cur_group
+
+        face = Face(self, group, vertex_ids)
         self._faces.append(face)
         return face
 
@@ -235,12 +279,13 @@ class Model:
                     if v_ids and len(face._vertex_ids) < len(v_ids):
                         self.remove_face(face)
                         self.remove_face(neighbour)
-                        self.add_face([self._vertices[id] for id in v_ids])
+                        self.add_face([self._vertices[id] for id in v_ids], group=face._group)
         self._update()
         print(f'Simplify: Face count {face_count_before} before -> {len(self._faces)} after')
 
     def triangulate(self):
         face_count_before = len(self._faces)
+        # triangulate
         for face in list(self._faces):
             vert_count = len(face._vertex_ids)
             if vert_count > 3:
@@ -268,3 +313,5 @@ if __name__ == "__main__":
 
     for idx, vertex in enumerate(obj_model._vertices):
         print(f'v[{idx+1}] -> p:{vertex}, n:{obj_model._vertices_norm[idx]}')
+
+    print(f'bbox({obj_model._cur_group._name}): {obj_model._cur_group._bbox}')
