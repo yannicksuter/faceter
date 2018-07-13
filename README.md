@@ -2,9 +2,15 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
-* matrix math (translation, rotation, ..) and optimize some export functions 
+* migrate face._tag to face._tags representing a list of identifiers
+* simplification: merge tags too
+* support SVG to load contours 
+* improving rev-triangulation algorithm to be also robust with polygon(P>4)
+* using scipy.spacial for 2d triangulations 
+* generate interesting triangle fields, first attempt using delaunay
 * add contours/glyphs with extrude functionality
-* adapt integrated 3d visualizer to render model-class objects
+* refactor visualizer to render model-class objects
+* matrix math (translation, rotation, ..) and optimize some export functions 
 
 ## Requirements
 python 3.x

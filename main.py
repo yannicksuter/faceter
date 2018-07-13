@@ -39,7 +39,6 @@ if __name__ == "__main__":
         faceted_model.merge_model(facet, group_name=f'facet_{face_id}')
 
     faceted_model.triangulate()
-    faceted_model._update()
 
     for idx, group in enumerate(faceted_model._groups):
         model = faceted_model.get_group_model(group)

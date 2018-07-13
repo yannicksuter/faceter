@@ -7,6 +7,8 @@ def catch(func, handle=lambda e : e, *args, **kwargs):
         # return handle(e)
         return None
 
+
+
 class ObjLoader(object):
     def __init__(self, fileName):
         print(f'Loading {fileName} ...')
@@ -20,6 +22,7 @@ class ObjLoader(object):
         try:
             with open(fileName) as f:
                 for line in f:
+                    line = self.__remove_comments(line)
                     if line[:2] == "g ":
                         group_name = line[2:].strip()
                         if len(group_name) == 0:
@@ -52,3 +55,15 @@ class ObjLoader(object):
                         self._faces.append(face)
         except IOError:
             print(f'Error loading {fileName}. File not found.')
+
+    def __remove_comments(self, line):
+        try:
+            return line[0:line.index('#')]
+        except:
+            return line
+
+if __name__ == "__main__":
+    obj_data = ObjLoader(f'./example/tri_strip.obj')
+    print(f'Vertices: {len(obj_data._vertices)}')
+    print(f'Faces: {len(obj_data._faces)}')
+    print(f'Groups: {len(obj_data._groups)}')

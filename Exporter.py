@@ -21,7 +21,8 @@ def write_obj_normals(file, model):
 def write_obj_facegroup(file, model, group):
     file.write(f'\ng {group._name}\n')
     for face_id, face in enumerate(group._faces):
-        file.write('f ' + ' '.join([f'{vertex_id+1}//{face._id+1}' for vertex_id in face._vertex_ids]) + '\n')
+        tags = f'# {face._tag}\n' if face._tag else ''
+        file.write(tags + 'f ' + ' '.join([f'{vertex_id+1}//{face._id+1}' for vertex_id in face._vertex_ids]) + '\n')
 
 class Exporter:
     def __init__(self, model, export_filepath):
