@@ -2,7 +2,6 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
-* migrate face._tag to face._tags representing a list of identifiers
 * simplification: merge tags too
 * support SVG to load contours 
 * improving rev-triangulation algorithm to be also robust with polygon(P>4)

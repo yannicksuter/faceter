@@ -28,13 +28,13 @@ class Edge:
         return None
 
 class Face:
-    def __init__(self, model, group, vertex_ids, tag=None):
+    def __init__(self, model, group, vertex_ids, tags=[]):
         if DEBUG:
             print(f'FACE: {vertex_ids}')
 
         self._model = model
         self._group =group
-        self._tag = tag
+        self._tags = list(tags)
         self._vertex_ids = vertex_ids
         self._edges = []
         self._neighbour_faces = []
@@ -149,7 +149,7 @@ class Group:
         return bbox
 
     def get_faces_by_tag(self, tag):
-        return [face for face in self._faces if face._tag == tag]
+        return [face for face in self._faces if tag in face._tags]
 
 class Model:
     def __init__(self):
@@ -206,12 +206,12 @@ class Model:
         model = Model()
         model.set_group(group._name)
         for face in group._faces:
-            model.add_face([self._vertices[vid].copy() for vid in face._vertex_ids], tag=face._tag)
+            model.add_face([self._vertices[vid].copy() for vid in face._vertex_ids], tags=face._tags)
         model._update()
         return model
 
     def get_faces_by_tag(self, tag):
-        return [face for face in self._faces if face._tag == tag]
+        return [face for face in self._faces if face._tags == tag]
 
     def calculate_centers(self):
         for face in self._faces:
@@ -276,7 +276,7 @@ class Model:
                 return vid
         return None
 
-    def add_face(self, vertices, tag=None, group=None):
+    def add_face(self, vertices, tags=[], group=None):
         vertex_ids = []
         for vertex in vertices:
             vid = self.get_vertId(vertex)
@@ -291,7 +291,7 @@ class Model:
                 self.set_group("default")
             group = self._cur_group
 
-        face = Face(self, group, vertex_ids, tag)
+        face = Face(self, group, vertex_ids, tags)
         self._faces.append(face)
         return face
 
@@ -304,7 +304,7 @@ class Model:
         if group_name is not None:
             self.set_group(group_name)
         for face in model._faces:
-            self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids], face._tag)
+            self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids], face._tags)
         self._update()
 
     def simplify(self):
@@ -317,7 +317,7 @@ class Model:
                     if v_ids and len(face._vertex_ids) < len(v_ids):
                         self.remove_face(face)
                         self.remove_face(neighbour)
-                        self.add_face([self._vertices[id] for id in v_ids], group=face._group)
+                        self.add_face([self._vertices[id] for id in v_ids], group=face._group, tags=set(face._tags + neighbour._tags))
         self._update()
         print(f'Simplify: Face count {face_count_before} before -> {len(self._faces)} after')
 
@@ -355,6 +355,10 @@ class Model:
 if __name__ == "__main__":
     obj_data = ObjLoader.ObjLoader('./example/cube.obj')
     obj_model = Model.load_fromdata(obj_data)
+
+    for idx, face in enumerate(obj_model._faces):
+        face._tags.append(f'f_{idx}')
+
     obj_model.simplify()
 
     for idx, face in enumerate(obj_model._faces):
@@ -364,3 +368,5 @@ if __name__ == "__main__":
         print(f'v[{idx+1}] -> p:{vertex}, n:{obj_model._vertices_norm[idx]}')
 
     print(f'bbox({obj_model._cur_group._name}): {obj_model._cur_group._bbox}')
+    from Exporter import Exporter
+    Exporter.write_obj(obj_model, './export/_cube.obj')

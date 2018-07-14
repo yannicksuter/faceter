@@ -11,13 +11,13 @@ def generate_facet(dest_model, source_model, face, brick_height, top_height, top
         verts.append(source_model._vertices[vid])
         verts_inner.append(source_model._vertices[vid] + (-1. * brick_height * source_model._vertices_norm[vid]))
         verts_top.append(face._center + ((source_model._vertices[vid] - face._center) * top_size) - (face._norm * top_height))
-    dest_model.add_face(verts, tag='bottom')
+    dest_model.add_face(verts, tags=['bottom'])
 
     # reverse id order to generate the correct face orientation
     verts = list(reversed(verts))
     verts_inner = list(reversed(verts_inner))
     verts_top = list(reversed(verts_top))
-    dest_model.add_face(verts_top, tag='top')
+    dest_model.add_face(verts_top, tags=['top'])
 
     # add sides
     cnt = len(face._vertex_ids)
