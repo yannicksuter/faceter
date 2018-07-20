@@ -1,0 +1,1 @@
+from svg.Path import Path

@@ -2,7 +2,6 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
-* simplification: merge tags too
 * support SVG to load contours 
 * improving rev-triangulation algorithm to be also robust with polygon(P>4)
 * using scipy.spacial for 2d triangulations 
