@@ -6,14 +6,22 @@ import numpy as np
 
 class Path:
     def __init__(self, description):
+        """Parse path element from a SVG<1.1 file. (https://www.w3.org/TR/SVG/paths.html#PathData)"""
+        self._shapes = []
         for token in description['d'].split(' '):
             if token[0:1] == 'm':
-                print('>>> moveto')
+                # moveto
+                _cur_line = []
             elif token[0:1] == 'z':
-                print('>>> closepath')
+                # closepath
+                self._shapes.append(_cur_line)
             else:
-                print(token)
-        print('<<<<<<<<<<<<<<<< DONE')
+                vec = np.array([t(s) for t, s in zip((float, float), token.split(','))])
+                if len(_cur_line) == 0:
+                    _cur_pos = vec
+                else:
+                    _cur_pos += vec
+                _cur_line.append(_cur_pos.copy())
 
     @staticmethod
     def read(filename):
