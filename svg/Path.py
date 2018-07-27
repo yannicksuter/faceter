@@ -36,11 +36,11 @@ def angle(v1, v2):
     if angle < 0.:
         angle += (2. * math.pi)
     return angle
-    # return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
 class Shape:
     def __init__(self, vertices):
         self._vertices = vertices.copy()
+        self._angles = [angle(self._vertices[(i+1)%len(self._vertices)]-v, self._vertices[(i-1)%len(self._vertices)]-v) for i, v in enumerate(self._vertices)]
         self._bbox = BoundingBox(self._vertices)
         self._norm = vm.unit_vector(np.cross(self._vertices[-1] - self._vertices[0], self._vertices[1] - self._vertices[0])) * -1.
 
@@ -69,12 +69,7 @@ class Shape:
         model.add_face(v_list)
         model._update()
         return model
-
-    def __get_norm(self):
-        u = self._vertices[-1] - self._vertices[0]
-        v = self._vertices[1] - self._vertices[0]
-        return vm.unit_vector(np.cross(u, v))
-
+ d
     def __sign(self, p1, p2, p3):
         return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
 
