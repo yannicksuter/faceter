@@ -13,6 +13,10 @@ class VecMath:
         return vector / np.linalg.norm(vector)
 
     @staticmethod
+    def equal(v1, v2):
+        return np.array_equal(v1, v2)
+
+    @staticmethod
     def angle_between(v1, v2):
         """ Returns the angle in radians between vectors 'v1' and 'v2' """
         v1_u = VecMath.unit_vector(v1)

@@ -3,8 +3,12 @@
 
 import xml.etree.ElementTree as ET
 import numpy as np
+import math
 
 from Plane import Plane
+from Model import Model
+from Exporter import Exporter
+from VecMath import VecMath as vm
 
 class BoundingBox:
     def __init__(self, vertices):
@@ -38,7 +42,37 @@ class Shape:
             return self._bbox.is_inside(other._bbox)
         return False
 
-    def tostring(self):
+    def triangulate(self):
+        """Triangulate shape using ear clipping algorithm."""
+        model = Model()
+        v_list = [np.array([v[0], v[1], 0.]) for v in self._vertices]
+        while len(v_list) > 3:
+            for i,v in enumerate(v_list):
+                # print(f'processing {i}, {v}')
+                v0 = v_list[(i-1)%len(v_list)]
+                v1 = v_list[(i+1)%len(v_list)]
+                ang = vm.angle_between(v0-v, v1-v)
+                #first: find a triangle with a convex corner
+                if ang < math.pi:
+                    #second: check if no other vertices are inside triangle
+                    if not any(not vm.equal(vv,v) and not vm.equal(vv,v0) and not vm.equal(vv,v1) and self.__point_in_triangle(vv, v0, v, v1) for vv in v_list):
+                        model.add_face([v0, v, v1])
+                        v_list.pop(i)
+                        break
+        model.add_face(v_list)
+        model._update()
+        return model
+
+    def __sign(self, p1, p2, p3):
+        return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+
+    def __point_in_triangle(self, pt, v1, v2, v3):
+        b1 = self.__sign(pt, v1, v2) < 0.0
+        b2 = self.__sign(pt, v2, v3) < 0.0
+        b3 = self.__sign(pt, v3, v1) < 0.0
+        return (b1 == b2) and (b2 == b3)
+
+    def to_string(self):
         return f'vertices: {len(self._vertices)} bbox: {self._bbox._min}/{self._bbox._max}'
 
 class Path:
@@ -83,15 +117,10 @@ class Path:
             print(f'Error while reading {filename}.')
         return _paths
 
-# def v3(v):
-#     return np.array([v[0], v[1], 0.])
-
 if __name__ == "__main__":
-    paths = Path.read(f'../example/svg/0123.svg')
+    paths = Path.read(f'./example/svg/0123.svg')
     for idx, p in enumerate(paths):
-        print(f'{idx}: {len(p._shapes)}')
-        if len(p._shapes) > 1:
-            print(p._shapes[0].is_inside(p._shapes[-1]))
-        # for s in p._shapes:
-        #     cp = Plane.from_points(v3(s._vertices[0]), v3(s._vertices[1]), v3(s._vertices[2]))
-        #     print(f'{len(s._vertices)} {cp._norm}')
+        shape_model = p._shapes[-1].triangulate()
+
+        Exporter.translate(shape_model, -shape_model.get_center())  # center object
+        Exporter.write_obj(shape_model, f'./export/_svg{idx}.obj')
