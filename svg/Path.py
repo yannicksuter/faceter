@@ -31,6 +31,13 @@ class BoundingBox:
         """Get size of bounding box."""
         return np.absolute(self._max - self._min)
 
+def angle(v1, v2):
+    angle = math.atan2(v2[1], v2[0]) - math.atan2(v1[1], v1[0])
+    if angle < 0.:
+        angle += (2. * math.pi)
+    return angle
+    # return np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+
 class Shape:
     def __init__(self, vertices):
         self._vertices = vertices.copy()
@@ -51,7 +58,8 @@ class Shape:
                 # print(f'processing {i}, {v}')
                 v0 = v_list[(i-1)%len(v_list)]
                 v1 = v_list[(i+1)%len(v_list)]
-                ang = vm.angle_between(v0-v, v1-v)
+                ang = angle(v1-v, v0-v)
+                # ang2 = vm.angle_between(v1 - v, v0 - v)
                 #first: find a triangle with a convex corner
                 if ang < math.pi:
                     #second: check if no other vertices are inside triangle
