@@ -42,7 +42,7 @@ class Shape:
     def __init__(self, vertices):
         self._vertices = vertices.copy()
         self._bbox = BoundingBox(self._vertices)
-        self._tt = True
+        self._norm = vm.unit_vector(np.cross(self._vertices[-1] - self._vertices[0], self._vertices[1] - self._vertices[0])) * -1.
 
     def is_inside(self, other):
         if isinstance(other, Shape):
@@ -59,7 +59,6 @@ class Shape:
                 v0 = v_list[(i-1)%len(v_list)]
                 v1 = v_list[(i+1)%len(v_list)]
                 ang = angle(v1-v, v0-v)
-                # ang2 = vm.angle_between(v1 - v, v0 - v)
                 #first: find a triangle with a convex corner
                 if ang < math.pi:
                     #second: check if no other vertices are inside triangle
@@ -70,6 +69,11 @@ class Shape:
         model.add_face(v_list)
         model._update()
         return model
+
+    def __get_norm(self):
+        u = self._vertices[-1] - self._vertices[0]
+        v = self._vertices[1] - self._vertices[0]
+        return vm.unit_vector(np.cross(u, v))
 
     def __sign(self, p1, p2, p3):
         return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
@@ -128,6 +132,8 @@ class Path:
 if __name__ == "__main__":
     paths = Path.read(f'./example/svg/0123.svg')
     for idx, p in enumerate(paths):
+        for s in p._shapes:
+            print(f'{idx}: {s._norm}')
         shape_model = p._shapes[-1].triangulate()
 
         Exporter.translate(shape_model, -shape_model.get_center())  # center object
