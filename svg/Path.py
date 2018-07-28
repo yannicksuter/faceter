@@ -40,6 +40,7 @@ def angle(v1, v2):
 class Shape:
     def __init__(self, vertices):
         self._vertices = vertices.copy()
+        self._edges = [Segment2D(i, (i+1)%len(vertices), v, vertices[(i+1)%len(vertices)]) for i,v in enumerate(vertices)]
         self._angles = [angle(self._vertices[(i+1)%len(self._vertices)]-v, self._vertices[(i-1)%len(self._vertices)]-v) for i, v in enumerate(self._vertices)]
         self._bbox = BoundingBox(self._vertices)
         self._norm = vm.unit_vector(np.cross(self._vertices[-1] - self._vertices[0], self._vertices[1] - self._vertices[0])) * -1.
@@ -82,6 +83,42 @@ class Shape:
     def to_string(self):
         return f'vertices: {len(self._vertices)} bbox: {self._bbox._min}/{self._bbox._max}'
 
+# def line(p1, p2):
+#     A = (p1[1] - p2[1])
+#     B = (p2[0] - p1[0])
+#     C = (p1[0]*p2[1] - p2[0]*p1[1])
+#     return A, B, -C
+
+class Segment2D:
+    def __init__(self, idx0, idx1, v0, v1):
+        self._idx0 = idx0
+        self._v0= v0
+        self._idx1 = idx1
+        self._v1= v1
+        A = (v0[1] - v1[1])
+        B = (v1[0] - v0[0])
+        C = (v0[0] * v1[1] - v1[0] * v0[1])
+        self._line = A, B, -C
+
+    @classmethod
+    def ray(cls, p, dir):
+        return cls(None, None, p, p+dir)
+
+    def intersect_line(self, other):
+        D = self._line[0] * other._line[1] - self._line[1] * other._line[0]
+        Dx = self._line[2] * other._line[1] - self._line[1] * other._line[2]
+        Dy = self._line[0] * other._line[2] - self._line[2] * other._line[0]
+        if D != 0:
+            x = Dx / D
+            y = Dy / D
+            return x, y
+        else:
+            return False
+
+    def intersect_segment(self, other):
+        #todo: implement
+        return self.intersect_line(other)
+
 class Path:
     def __init__(self, description):
         """Parse path element from a SVG<1.1 file. (https://www.w3.org/TR/SVG/paths.html#PathData)"""
@@ -103,12 +140,21 @@ class Path:
                 _cur_line.append(_cur_pos.copy())
 
     def triangulate(self):
-        model = Model()
         outer_shapes = [shape for shape in self._shapes if shape._norm == 1.0]
-        for inner_shape in [shape for shape in self._shapes if shape._norm == -1.0]:
-            # find max-x vertice in shape
-            x_indices = int(np.array(inner_shape._vertices).argmax(axis=0)[0])
-        return model
+        inner_shapes = [shape for shape in self._shapes if shape._norm == -1.0]
+
+        if inner_shapes:
+            model = Model()
+            for shape in inner_shapes:
+                #find max-x vertice in inner_shape
+                x_indices = int(np.array(shape._vertices).argmax(axis=0)[0])
+                #find outer segment that intersects ray
+                ray = Segment2D.ray(shape._vertices[x_indices], np.array([1, 0]))
+                for s in outer_shapes[0]._edges:
+                    t=s.intersect(ray)
+            return model
+        else:
+            return [shape.triangulate() for shape in outer_shapes]
 
     @staticmethod
     def read(filename):
