@@ -116,8 +116,10 @@ class Segment2D:
             return False
 
     def intersect_segment(self, other):
-        #todo: implement
-        return self.intersect_line(other)
+        pt = self.intersect_line(other)
+        if pt:
+            return (pt[0] >= self._v0[0] and pt[0] <= self._v1[0])
+        return False
 
 class Path:
     def __init__(self, description):
@@ -147,11 +149,13 @@ class Path:
             model = Model()
             for shape in inner_shapes:
                 #find max-x vertice in inner_shape
-                x_indices = int(np.array(shape._vertices).argmax(axis=0)[0])
+                inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
                 #find outer segment that intersects ray
-                ray = Segment2D.ray(shape._vertices[x_indices], np.array([1, 0]))
+                ray = Segment2D.ray(shape._vertices[inner_idx], np.array([1, 0]))
                 for s in outer_shapes[0]._edges:
-                    t=s.intersect(ray)
+                    if s.intersect_segment(ray):
+                        outer_idx = s._idx1
+                print(f'inner: {inner_idx} outer: {outer_idx}')
             return model
         else:
             return [shape.triangulate() for shape in outer_shapes]
@@ -180,9 +184,10 @@ class Path:
 
 if __name__ == "__main__":
     paths = Path.read(f'./example/svg/0123.svg')
-    for idx, p in enumerate(paths):
-        path_model = p.triangulate()
 
+    path_model = paths[0].triangulate()
+
+    for idx, p in enumerate(paths):
         for s in p._shapes:
             print(f'{idx}: {s._norm}')
         shape_model = p._shapes[-1].triangulate()
