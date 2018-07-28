@@ -69,7 +69,7 @@ class Shape:
         model.add_face(v_list)
         model._update()
         return model
- d
+
     def __sign(self, p1, p2, p3):
         return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
 
@@ -102,6 +102,14 @@ class Path:
                     _cur_pos = vec
                 _cur_line.append(_cur_pos.copy())
 
+    def triangulate(self):
+        model = Model()
+        outer_shapes = [shape for shape in self._shapes if shape._norm == 1.0]
+        for inner_shape in [shape for shape in self._shapes if shape._norm == -1.0]:
+            # find max-x vertice in shape
+            x_indices = int(np.array(inner_shape._vertices).argmax(axis=0)[0])
+        return model
+
     @staticmethod
     def read(filename):
         _paths = []
@@ -127,6 +135,8 @@ class Path:
 if __name__ == "__main__":
     paths = Path.read(f'./example/svg/0123.svg')
     for idx, p in enumerate(paths):
+        path_model = p.triangulate()
+
         for s in p._shapes:
             print(f'{idx}: {s._norm}')
         shape_model = p._shapes[-1].triangulate()
