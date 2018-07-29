@@ -83,12 +83,6 @@ class Shape:
     def to_string(self):
         return f'vertices: {len(self._vertices)} bbox: {self._bbox._min}/{self._bbox._max}'
 
-# def line(p1, p2):
-#     A = (p1[1] - p2[1])
-#     B = (p2[0] - p1[0])
-#     C = (p1[0]*p2[1] - p2[0]*p1[1])
-#     return A, B, -C
-
 class Segment2D:
     def __init__(self, idx0, idx1, v0, v1):
         self._idx0 = idx0
@@ -117,6 +111,7 @@ class Segment2D:
 
     def intersect_segment(self, other):
         pt = self.intersect_line(other)
+        print(pt)
         if pt:
             return (pt[0] >= self._v0[0] and pt[0] <= self._v1[0])
         return False
@@ -146,17 +141,21 @@ class Path:
         inner_shapes = [shape for shape in self._shapes if shape._norm == -1.0]
 
         if inner_shapes:
-            model = Model()
+
+            vertices = list(outer_shapes[0]._vertices)
             for shape in inner_shapes:
                 #find max-x vertice in inner_shape
                 inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
-                #find outer segment that intersects ray
-                ray = Segment2D.ray(shape._vertices[inner_idx], np.array([1, 0]))
-                for s in outer_shapes[0]._edges:
-                    if s.intersect_segment(ray):
-                        outer_idx = s._idx1
-                print(f'inner: {inner_idx} outer: {outer_idx}')
-            return model
+                inner_v = shape._vertices[inner_idx]
+
+                #find the closest outer-vertice on the right side
+                outer_idx = min([(vm.len(inner_v-v), idx) for idx, v in enumerate(vertices) if v[0] >= inner_v[0]], key=lambda x:x[0])[1]
+
+                #insert inner shape and bridges
+                for i in range(len(shape._vertices)):
+                    vertices.insert(outer_idx+i+1, shape._vertices[(inner_idx+i)%len(shape._vertices)])
+
+            return Shape(vertices).triangulate()
         else:
             return [shape.triangulate() for shape in outer_shapes]
 
@@ -177,20 +176,23 @@ class Path:
                         _paths.append(Path(elem.attrib))
                     except:
                         pass
-            print(f'{len(_paths)} elements read from {filename}.')
+            print(f'{len(_paths)} elements read from {filename}')
         except:
-            print(f'Error while reading {filename}.')
+            print(f'Error while reading {filename}')
         return _paths
 
 if __name__ == "__main__":
     paths = Path.read(f'./example/svg/0123.svg')
 
-    path_model = paths[0].triangulate()
+    path_model = paths[8].triangulate()
+    Exporter.translate(path_model, -path_model.get_center())  # center object
+    Exporter.write_obj(path_model, f'./export/_svg{8}.obj')
 
-    for idx, p in enumerate(paths):
-        for s in p._shapes:
-            print(f'{idx}: {s._norm}')
-        shape_model = p._shapes[-1].triangulate()
 
-        Exporter.translate(shape_model, -shape_model.get_center())  # center object
-        Exporter.write_obj(shape_model, f'./export/_svg{idx}.obj')
+    # for idx, p in enumerate(paths):
+    #     for s in p._shapes:
+    #         print(f'{idx}: {s._norm}')
+    #     shape_model = p._shapes[-1].triangulate()
+    #
+    #     Exporter.translate(shape_model, -shape_model.get_center())  # center object
+    #     Exporter.write_obj(shape_model, f'./export/_svg{idx}.obj')

@@ -28,6 +28,11 @@ class VecMath:
         return np.linalg.norm(p2 - p1)
 
     @staticmethod
+    def len(v):
+        """Return the len of a n-dimentional vector"""
+        return np.linalg.norm(v)
+
+    @staticmethod
     def dist_point_to_line(line_point, line_dir, point):
         """Calculate the distance of a point perpendicular to a line defined by line_point and dir."""
         return np.linalg.norm(np.abs(np.cross(line_dir, line_point - point) / np.linalg.norm(line_dir)))
