@@ -154,6 +154,8 @@ class Path:
                 #insert inner shape and bridges
                 for i in range(len(shape._vertices)):
                     vertices.insert(outer_idx+i+1, shape._vertices[(inner_idx+i)%len(shape._vertices)])
+                vertices.insert(outer_idx+len(shape._vertices)+1, shape._vertices[inner_idx])
+                vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
 
             return Shape(vertices).triangulate()
         else:
@@ -186,7 +188,7 @@ if __name__ == "__main__":
 
     path_model = paths[8].triangulate()
     Exporter.translate(path_model, -path_model.get_center())  # center object
-    Exporter.write_obj(path_model, f'./export/_svg{8}.obj')
+    Exporter.write_obj(path_model, f'./export/_svg{0}.obj')
 
 
     # for idx, p in enumerate(paths):
