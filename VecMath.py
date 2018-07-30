@@ -1,6 +1,6 @@
 import numpy as np
 
-EPSILON = 0.00001
+EPSILON = 0.0001
 
 class VecMath:
     _X = 0
@@ -10,11 +10,19 @@ class VecMath:
     @staticmethod
     def unit_vector(vector):
         """ Returns the unit vector of the vector.  """
+        # l = np.linalg.norm(vector)
+        # if float(l) != 0.0:
+        if np.linalg.norm(vector) == 0.:
+            return 1.
         return vector / np.linalg.norm(vector)
+
+        # return 0.
 
     @staticmethod
     def equal(v1, v2):
-        return np.array_equal(v1, v2)
+        return all(abs(u0-u1) < EPSILON for u0, u1 in zip(v1, v2))
+
+        # return np.array_equal(v1, v2)
 
     @staticmethod
     def angle_between(v1, v2):

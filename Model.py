@@ -11,8 +11,9 @@ class Edge:
         self.v0_id = v0_id
         self.v1_id = v1_id
         self.length = len
-        if DEBUG:
-            print(f'EDGE: {v0_id} -> {v1_id}')
+
+    def to_string(self):
+        print(f'EDGE: {v0_id} -> {v1_id}')
 
     def is_equal(self, edge):
         if (self.v0_id == edge.v0_id and self.v1_id == edge.v1_id) or \
@@ -29,9 +30,6 @@ class Edge:
 
 class Face:
     def __init__(self, model, group, vertex_ids, tags=[]):
-        if DEBUG:
-            print(f'FACE: {vertex_ids}')
-
         self._model = model
         self._group =group
         self._tags = list(tags)

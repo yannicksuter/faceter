@@ -10,7 +10,7 @@ class TestSVG(unittest.TestCase):
     def test_intersect_line(self):
         s1 = svg.Segment2D(None, None, np.array([0, 1]), np.array([2, 3]))
         s2 = svg.Segment2D(None, None, np.array([2, 3]), np.array([0, 4]))
-        R = s1.intersect_line(s2)
+   L     R = s1.intersect_line(s2)
         # True: valid intersection
         self.assertTrue(R)
 

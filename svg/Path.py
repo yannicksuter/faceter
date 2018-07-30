@@ -4,6 +4,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import math
+from enum import Enum
 
 from Plane import Plane
 from Model import Model
@@ -37,13 +38,27 @@ def angle(v1, v2):
         angle += (2. * math.pi)
     return angle
 
+class ShapeOrientation(Enum):
+    ORIENTATION_CW = 1
+    ORIENTATION_CCW = 2
+
 class Shape:
     def __init__(self, vertices):
         self._vertices = vertices.copy()
-        self._edges = [Segment2D(i, (i+1)%len(vertices), v, vertices[(i+1)%len(vertices)]) for i,v in enumerate(vertices)]
+        self.__update()
+
+    def reverse(self):
+        self._vertices = list(reversed(self._vertices))
+        self.__update()
+
+    def __update(self):
+        v_count = len(self._vertices)
+        self._edges = [Segment2D(i, (i+1)%v_count, v, self._vertices[(i+1)%v_count]) for i,v in enumerate(self._vertices)]
         self._angles = [angle(self._vertices[(i+1)%len(self._vertices)]-v, self._vertices[(i-1)%len(self._vertices)]-v) for i, v in enumerate(self._vertices)]
         self._bbox = BoundingBox(self._vertices)
-        self._norm = vm.unit_vector(np.cross(self._vertices[-1] - self._vertices[0], self._vertices[1] - self._vertices[0])) * -1.
+        def shoelace(v1, v2):
+            return (v2[0]-v1[0])*(v2[1]+v1[1])
+        self._orientation = ShapeOrientation.ORIENTATION_CW if sum([shoelace(v,self._vertices[(i+1)%v_count] ) for i,v in enumerate(self._vertices)]) > 0. else ShapeOrientation.ORIENTATION_CCW
 
     def is_inside(self, other):
         if isinstance(other, Shape):
@@ -120,28 +135,56 @@ class Path:
     def __init__(self, description):
         """Parse path element from a SVG<1.1 file. (https://www.w3.org/TR/SVG/paths.html#PathData)"""
         self._shapes = []
-        _cur_pos = None
-        for token in description['d'].split(' '):
-            if token[0:1] == 'm':
-                # moveto
-                _cur_line = []
-            elif token[0:1] == 'z':
-                # closepath
-                self._shapes.append(Shape(_cur_line[:-1]))
-            else:
-                vec = np.array([t(s) for t, s in zip((float, float), token.split(','))])
-                if _cur_pos is not None:
-                    _cur_pos += vec
+        if 'id' in description:
+            self._id = description['id']
+
+        cur_pos = None
+        token = description['d'].split(' ')
+        token_idx = 0
+        while token_idx < len(token):
+            cur_token = token[token_idx]
+            # print(f'{cur_token}')
+            if cur_token[0:1] == 'm' or cur_token[0:1] == 'M':
+                # moveto: relative/absolute mode
+                absolute_mode = False if cur_token[0:1] == 'm' else True
+                if token_idx == 0 or absolute_mode:
+                    cur_pos = self.__read_vec(token[token_idx+1])
                 else:
-                    _cur_pos = vec
-                _cur_line.append(_cur_pos.copy())
+                    cur_pos += self.__read_vec(token[token_idx+1])
+                cur_shape = [cur_pos.copy()]
+                token_idx += 2
+            elif cur_token[0:1] == 'z' or cur_token[0:1] == 'Z':
+                # closepath
+                if vm.equal(cur_shape[-1], cur_shape[0]):
+                    cur_shape = cur_shape[:-1]
+                self._shapes.append(Shape(cur_shape))
+                token_idx += 1
+            elif cur_token[0:1] == 'l' or cur_token[0:1] == 'L':
+                # lineto: relative/absolute mode
+                token_idx += 1
+            elif cur_token[0:1] == 'h' or cur_token[0:1] == 'H':
+                # horizontal lineto: relative/absolute mode
+                token_idx += 1
+            elif cur_token[0:1] == 'v' or cur_token[0:1] == 'V':
+                # vertical lineto: relative/absolute mode
+                token_idx += 1
+            else:
+                v = self.__read_vec(token[token_idx])
+                if absolute_mode:
+                    cur_pos = v
+                else:
+                    cur_pos += v
+                cur_shape.append(cur_pos.copy())
+                token_idx += 1
+
+    def __read_vec(self, token):
+        return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
     def triangulate(self):
-        outer_shapes = [shape for shape in self._shapes if shape._norm == 1.0]
-        inner_shapes = [shape for shape in self._shapes if shape._norm == -1.0]
+        outer_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CCW]
+        inner_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CW]
 
         if inner_shapes:
-
             vertices = list(outer_shapes[0]._vertices)
             for shape in inner_shapes:
                 #find max-x vertice in inner_shape
@@ -184,17 +227,22 @@ class Path:
         return _paths
 
 if __name__ == "__main__":
-    paths = Path.read(f'./example/svg/0123.svg')
+    # paths = Path.read(f'./example/svg/0123.svg')
+    # paths = Path.read(f'./example/svg/yannick.svg')
+    # paths = Path.read(f'./example/svg/yannick2.svg')
+    paths = Path.read(f'./example/svg/test.svg')
 
-    path_model = paths[8].triangulate()
+    path_model = paths[0].triangulate()
     Exporter.translate(path_model, -path_model.get_center())  # center object
-    Exporter.write_obj(path_model, f'./export/_svg{0}.obj')
+    Exporter.write_obj(path_model, f'./export/__svg{8}.obj')
 
-
-    # for idx, p in enumerate(paths):
-    #     for s in p._shapes:
-    #         print(f'{idx}: {s._norm}')
+    for idx, p in enumerate(paths):
+        for s in p._shapes:
+            print(f'path {idx}: orientation={s._orientation} vertices:{len(s._vertices)}')
     #     shape_model = p._shapes[-1].triangulate()
-    #
-    #     Exporter.translate(shape_model, -shape_model.get_center())  # center object
-    #     Exporter.write_obj(shape_model, f'./export/_svg{idx}.obj')
+    # Exporter.translate(shape_model, -shape_model.get_center())  # center object
+    # Exporter.write_obj(shape_model, f'./export/_svg{idx}.obj')
+
+    # path_model = paths[0].triangulate()
+    # Exporter.translate(path_model, -path_model.get_center())  # center object
+    # Exporter.write_obj(path_model, f'./export/_test.obj')
