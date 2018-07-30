@@ -55,10 +55,6 @@ class Plane:
         ndotu = self._norm.dot(ray_dir)
         if abs(ndotu) < epsilon:
             raise RuntimeError("no intersection or ray is within plane")
-
         w = ray_start - self._point
         si = -self._norm.dot(w) / ndotu
         return (w + si * ray_dir + self._point)
-
-# if __name__ == "__main__":
-    # todo:

@@ -61,7 +61,7 @@ class Shape:
         self._orientation = ShapeOrientation.ORIENTATION_CW if sum([shoelace(v,self._vertices[(i+1)%v_count] ) for i,v in enumerate(self._vertices)]) > 0. else ShapeOrientation.ORIENTATION_CCW
 
     def is_inside(self, other):
-        if isinstance(other, Shape):
+        if isinstance(other, Shape) and self != other:
             return self._bbox.is_inside(other._bbox)
         return False
 
@@ -135,6 +135,7 @@ class Path:
     def __init__(self, description):
         """Parse path element from a SVG<1.1 file. (https://www.w3.org/TR/SVG/paths.html#PathData)"""
         self._shapes = []
+        self._id = None
         if 'id' in description:
             self._id = description['id']
 
@@ -180,13 +181,27 @@ class Path:
     def __read_vec(self, token):
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
-    def triangulate(self):
-        outer_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CCW]
-        inner_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CW]
+    def split_shapes(self):
+        groups = {shape: [] for shape in self._shapes}
+        for outer, inner in groups.copy().items():
+            for shape in self._shapes:
+                if shape.is_inside(outer):
+                    inner.append(shape)
+                    del groups[shape]
+        return groups
 
-        if inner_shapes:
-            vertices = list(outer_shapes[0]._vertices)
+    def triangulate(self):
+        res = []
+        for outer, inner_shapes in self.split_shapes().items():
+            # inner shape must be counter clockwise oriented
+            if outer._orientation != ShapeOrientation.ORIENTATION_CCW:
+                outer.reverse()
+            vertices = list(outer._vertices)
             for shape in inner_shapes:
+                #inner shape must be clockwise oriented
+                if shape._orientation !=  ShapeOrientation.ORIENTATION_CW:
+                    shape.reverse()
+
                 #find max-x vertice in inner_shape
                 inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
                 inner_v = shape._vertices[inner_idx]
@@ -200,9 +215,32 @@ class Path:
                 vertices.insert(outer_idx+len(shape._vertices)+1, shape._vertices[inner_idx])
                 vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
 
-            return Shape(vertices).triangulate()
-        else:
-            return [shape.triangulate() for shape in outer_shapes]
+            res.append((Shape(vertices).triangulate(), outer, inner_shapes))
+        return res
+
+        #
+        # outer_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CCW]
+        # inner_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CW]
+        #
+        # if inner_shapes:
+        #     vertices = list(outer_shapes[0]._vertices)
+        #     for shape in inner_shapes:
+        #         #find max-x vertice in inner_shape
+        #         inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
+        #         inner_v = shape._vertices[inner_idx]
+        #
+        #         #find the closest outer-vertice on the right side
+        #         outer_idx = min([(vm.len(inner_v-v), idx) for idx, v in enumerate(vertices) if v[0] >= inner_v[0]], key=lambda x:x[0])[1]
+        #
+        #         #insert inner shape and bridges
+        #         for i in range(len(shape._vertices)):
+        #             vertices.insert(outer_idx+i+1, shape._vertices[(inner_idx+i)%len(shape._vertices)])
+        #         vertices.insert(outer_idx+len(shape._vertices)+1, shape._vertices[inner_idx])
+        #         vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
+        #
+        #     return Shape(vertices).triangulate()
+        # else:
+        #     return [shape.triangulate() for shape in outer_shapes]
 
     @staticmethod
     def read(filename):
@@ -227,22 +265,21 @@ class Path:
         return _paths
 
 if __name__ == "__main__":
-    # paths = Path.read(f'./example/svg/0123.svg')
+    filename = '0123'
+    # filename = 'yannick.svg'
+    # filename = 'yannick2.svg'
+    # filename = 'test.svg'
+    paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
     # paths = Path.read(f'./example/svg/yannick2.svg')
-    paths = Path.read(f'./example/svg/test.svg')
+    # paths = Path.read(f'./example/svg/test.svg')
 
-    path_model = paths[0].triangulate()
-    Exporter.translate(path_model, -path_model.get_center())  # center object
-    Exporter.write_obj(path_model, f'./export/__svg{8}.obj')
+    combined_model = Model()
+    for path in paths:
+        print(f'triangulating path={path._id}')
+        path_models = path.triangulate()
+        for m in path_models:
+            combined_model.merge_model(m[0])
 
-    for idx, p in enumerate(paths):
-        for s in p._shapes:
-            print(f'path {idx}: orientation={s._orientation} vertices:{len(s._vertices)}')
-    #     shape_model = p._shapes[-1].triangulate()
-    # Exporter.translate(shape_model, -shape_model.get_center())  # center object
-    # Exporter.write_obj(shape_model, f'./export/_svg{idx}.obj')
-
-    # path_model = paths[0].triangulate()
-    # Exporter.translate(path_model, -path_model.get_center())  # center object
-    # Exporter.write_obj(path_model, f'./export/_test.obj')
+    Exporter.translate(combined_model, -combined_model.get_center())  # center object
+    Exporter.write_obj(combined_model, f'./export/_{filename}.obj')

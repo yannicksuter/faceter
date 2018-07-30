@@ -299,7 +299,9 @@ class Model:
             self._faces.remove(face)
 
     def merge_model(self, model, group_name=None):
-        if group_name is not None:
+        if not isinstance(model, Model):
+            raise RuntimeError("Cannot merge object other than type Model.")
+        if group_name:
             self.set_group(group_name)
         for face in model._faces:
             self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids], face._tags)
