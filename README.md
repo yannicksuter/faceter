@@ -11,6 +11,8 @@ Script to explode a 3d (obj) file into printable pieces.
 * refactor visualizer to render model-class objects
 * matrix math (translation, rotation, ..) and optimize some export functions 
 
+* BUG/model: faces added with area 0, this can happen with svg triangulation where vertices span a horizontal line.
+
 ## Requirements
 python 3.x
 

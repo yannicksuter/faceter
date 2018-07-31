@@ -60,9 +60,27 @@ class Shape:
             return (v2[0]-v1[0])*(v2[1]+v1[1])
         self._orientation = ShapeOrientation.ORIENTATION_CW if sum([shoelace(v,self._vertices[(i+1)%v_count] ) for i,v in enumerate(self._vertices)]) > 0. else ShapeOrientation.ORIENTATION_CCW
 
+    def __ray_tracing(self, x, y, poly):
+        n = len(poly)
+        inside = False
+        p1x, p1y = poly[0]
+        for i in range(n + 1):
+            p2x, p2y = poly[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                        if p1x == p2x or x <= xints:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+
     def is_inside(self, other):
         if isinstance(other, Shape) and self != other:
-            return self._bbox.is_inside(other._bbox)
+            if self._bbox.is_inside(other._bbox):
+                if all(self.__ray_tracing(v[0], v[1], other._vertices) for v in self._vertices):
+                    return True
         return False
 
     def triangulate(self):
@@ -188,6 +206,7 @@ class Path:
                 if shape.is_inside(outer):
                     inner.append(shape)
                     del groups[shape]
+
         return groups
 
     def triangulate(self):
@@ -218,30 +237,6 @@ class Path:
             res.append((Shape(vertices).triangulate(), outer, inner_shapes))
         return res
 
-        #
-        # outer_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CCW]
-        # inner_shapes = [shape for shape in self._shapes if shape._orientation == ShapeOrientation.ORIENTATION_CW]
-        #
-        # if inner_shapes:
-        #     vertices = list(outer_shapes[0]._vertices)
-        #     for shape in inner_shapes:
-        #         #find max-x vertice in inner_shape
-        #         inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
-        #         inner_v = shape._vertices[inner_idx]
-        #
-        #         #find the closest outer-vertice on the right side
-        #         outer_idx = min([(vm.len(inner_v-v), idx) for idx, v in enumerate(vertices) if v[0] >= inner_v[0]], key=lambda x:x[0])[1]
-        #
-        #         #insert inner shape and bridges
-        #         for i in range(len(shape._vertices)):
-        #             vertices.insert(outer_idx+i+1, shape._vertices[(inner_idx+i)%len(shape._vertices)])
-        #         vertices.insert(outer_idx+len(shape._vertices)+1, shape._vertices[inner_idx])
-        #         vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
-        #
-        #     return Shape(vertices).triangulate()
-        # else:
-        #     return [shape.triangulate() for shape in outer_shapes]
-
     @staticmethod
     def read(filename):
         _paths = []
@@ -265,10 +260,10 @@ class Path:
         return _paths
 
 if __name__ == "__main__":
-    filename = '0123'
-    # filename = 'yannick.svg'
-    # filename = 'yannick2.svg'
-    # filename = 'test.svg'
+    # filename = '0123'
+    # filename = 'yannick'
+    filename = 'yannick2'
+    # filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
     # paths = Path.read(f'./example/svg/yannick2.svg')
@@ -276,7 +271,7 @@ if __name__ == "__main__":
 
     combined_model = Model()
     for path in paths:
-        print(f'triangulating path={path._id}')
+        print(f'triangulating path={path._id} shapes={len(path._shapes)}')
         path_models = path.triangulate()
         for m in path_models:
             combined_model.merge_model(m[0])

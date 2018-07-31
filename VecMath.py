@@ -10,18 +10,13 @@ class VecMath:
     @staticmethod
     def unit_vector(vector):
         """ Returns the unit vector of the vector.  """
-        # l = np.linalg.norm(vector)
-        # if float(l) != 0.0:
         if np.linalg.norm(vector) == 0.:
-            return 1.
+            return vector
         return vector / np.linalg.norm(vector)
-
-        # return 0.
 
     @staticmethod
     def equal(v1, v2):
         return all(abs(u0-u1) < EPSILON for u0, u1 in zip(v1, v2))
-
         # return np.array_equal(v1, v2)
 
     @staticmethod

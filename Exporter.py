@@ -16,7 +16,10 @@ def write_obj_normals(file, model):
     """Write vertex normals to obj file"""
     file.write(f'\n')
     for face in model._faces:
-        file.write('vn %.4f %.4f %.4f\n' % tuple(face._norm[:3]))
+        try:
+            file.write('vn %.4f %.4f %.4f\n' % tuple(face._norm[:3]))
+        except:
+            pass
 
 def write_obj_facegroup(file, model, group):
     file.write(f'\ng {group._name}\n')
