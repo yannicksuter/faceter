@@ -2,12 +2,12 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
-* implementing ear clipping for shapes
-* add support for holes to tessalation of shapes 
+* add flip (by axis) method to model
+* add shape embedding
+* add extrude method
 * improving rev-triangulation algorithm to be also robust with polygon(P>4)
-* using scipy.spacial for 2d triangulations 
+** use ear clipping approach for 3d (P>4) polygon
 * generate interesting triangle fields, first attempt using delaunay
-* add contours/glyphs with extrude functionality
 * refactor visualizer to render model-class objects
 * matrix math (translation, rotation, ..) and optimize some export functions 
 
