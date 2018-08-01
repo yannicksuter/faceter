@@ -262,8 +262,8 @@ class Path:
 if __name__ == "__main__":
     # filename = '0123'
     # filename = 'yannick'
-    filename = 'yannick2'
-    # filename = 'test'
+    # filename = 'yannick2'
+    filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
     # paths = Path.read(f'./example/svg/yannick2.svg')
@@ -274,7 +274,7 @@ if __name__ == "__main__":
         print(f'triangulating path={path._id} shapes={len(path._shapes)}')
         path_models = path.triangulate()
         for m in path_models:
-            combined_model.merge_model(m[0])
+            combined_model.merge(m[0])
 
     Exporter.translate(combined_model, -combined_model.get_center())  # center object
     Exporter.write_obj(combined_model, f'./export/_{filename}.obj')

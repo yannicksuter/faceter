@@ -298,7 +298,7 @@ class Model:
         if face in self._faces:
             self._faces.remove(face)
 
-    def merge_model(self, model, group_name=None):
+    def merge(self, model, group_name=None):
         if not isinstance(model, Model):
             raise RuntimeError("Cannot merge object other than type Model.")
         if group_name:
