@@ -229,8 +229,9 @@ class Path:
                 shared_vertices = shape.get_identical_vertices(outer)
                 if shared_vertices:
                     if len(shared_vertices) > 1:
+                        #todo: this needs a proper solution -> split into 3 outer shapes
                         break;
-                    #if there are shared vertices, use these as a bridge
+                    #if there one shared vertice, use it as a bridge
                     inner_idx, outer_idx = shared_vertices[0]
                 else:
                     #find max-x vertice in inner_shape
