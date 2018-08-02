@@ -36,10 +36,13 @@ class Face:
         self._vertex_ids = vertex_ids
         self._edges = []
         self._neighbour_faces = []
+        self.__update()
 
-        for i in range(len(vertex_ids)):
-            v0_id = vertex_ids[i]
-            v1_id = vertex_ids[(i + 1) % len(vertex_ids)]
+    def __update(self):
+        self._edges = []
+        for i in range(len(self._vertex_ids)):
+            v0_id = self._vertex_ids[i]
+            v1_id = self._vertex_ids[(i + 1) % len(self._vertex_ids)]
             self._edges.append(Edge(v0_id, v1_id, np.linalg.norm(self._model._vertices[v1_id]-self._model._vertices[v0_id])))
 
         # face normal vector
@@ -54,6 +57,10 @@ class Face:
     def calculate_norm(self, vertices):
         self._norm = np.cross(vertices[self._vertex_ids[1]] - vertices[self._vertex_ids[0]], vertices[self._vertex_ids[2]] - vertices[self._vertex_ids[0]])
         self._norm = VecMath.unit_vector(self._norm)
+
+    def reverse(self):
+        self._vertex_ids = list(reversed(self._vertex_ids))
+        self.__update()
 
     @property
     def _id(self):
@@ -306,6 +313,15 @@ class Model:
         for face in model._faces:
             self.add_face([model._vertices[vid].copy() for vid in face._vertex_ids], face._tags)
         self._update()
+
+    def flip(self, axis_y=False):
+        if axis_y:
+            c = self.get_center()
+            for vertex in self._vertices:
+                vertex[1] = c[1] - (vertex[1]-c[1])
+            for face in self._faces:
+                face.reverse()
+            self._update()
 
     def simplify(self):
         face_count_before = len(self._faces)

@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import math
 from enum import Enum
+import itertools
 
 from Plane import Plane
 from Model import Model
@@ -79,7 +80,8 @@ class Shape:
     def is_inside(self, other):
         if isinstance(other, Shape) and self != other:
             if self._bbox.is_inside(other._bbox):
-                if all(self.__ray_tracing(v[0], v[1], other._vertices) for v in self._vertices):
+                shared = [u for u,v in self.get_identical_vertices(other)]
+                if all(self.__ray_tracing(v[0], v[1], other._vertices) for id, v in enumerate(self._vertices) if id not in shared):
                     return True
         return False
 
@@ -112,6 +114,10 @@ class Shape:
         b2 = self.__sign(pt, v2, v3) < 0.0
         b3 = self.__sign(pt, v3, v1) < 0.0
         return (b1 == b2) and (b2 == b3)
+
+    def get_identical_vertices(self, other):
+        res = [(u, v) for u, v in list(itertools.product(range(len(self._vertices)), range(len(other._vertices)))) if vm.equal(self._vertices[u], other._vertices[v])]
+        return res
 
     def to_string(self):
         return f'vertices: {len(self._vertices)} bbox: {self._bbox._min}/{self._bbox._max}'
@@ -206,7 +212,6 @@ class Path:
                 if shape.is_inside(outer):
                     inner.append(shape)
                     del groups[shape]
-
         return groups
 
     def triangulate(self):
@@ -221,18 +226,26 @@ class Path:
                 if shape._orientation !=  ShapeOrientation.ORIENTATION_CW:
                     shape.reverse()
 
-                #find max-x vertice in inner_shape
-                inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
-                inner_v = shape._vertices[inner_idx]
-
-                #find the closest outer-vertice on the right side
-                outer_idx = min([(vm.len(inner_v-v), idx) for idx, v in enumerate(vertices) if v[0] >= inner_v[0]], key=lambda x:x[0])[1]
+                shared_vertices = shape.get_identical_vertices(outer)
+                if shared_vertices:
+                    if len(shared_vertices) > 1:
+                        break;
+                    #if there are shared vertices, use these as a bridge
+                    inner_idx, outer_idx = shared_vertices[0]
+                else:
+                    #find max-x vertice in inner_shape
+                    inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
+                    inner_v = shape._vertices[inner_idx]
+                    #find the closest outer-vertice on the right side
+                    outer_idx = min([(vm.len(inner_v-v), idx) for idx, v in enumerate(vertices) if v[0] >= inner_v[0]], key=lambda x:x[0])[1]
 
                 #insert inner shape and bridges
                 for i in range(len(shape._vertices)):
                     vertices.insert(outer_idx+i+1, shape._vertices[(inner_idx+i)%len(shape._vertices)])
                 vertices.insert(outer_idx+len(shape._vertices)+1, shape._vertices[inner_idx])
-                vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
+                if not shared_vertices:
+                    #if shared vertices are used, inner and outer point to bridge are the same
+                    vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
 
             res.append((Shape(vertices).triangulate(), outer, inner_shapes))
         return res
@@ -262,19 +275,21 @@ class Path:
 if __name__ == "__main__":
     # filename = '0123'
     # filename = 'yannick'
-    # filename = 'yannick2'
-    filename = 'test'
+    filename = 'yannick2'
+    # filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
     # paths = Path.read(f'./example/svg/yannick2.svg')
     # paths = Path.read(f'./example/svg/test.svg')
 
     combined_model = Model()
-    for path in paths:
+    for path in paths[1:2]:
         print(f'triangulating path={path._id} shapes={len(path._shapes)}')
         path_models = path.triangulate()
         for m in path_models:
             combined_model.merge(m[0])
+
+    combined_model.flip(axis_y=True)
 
     Exporter.translate(combined_model, -combined_model.get_center())  # center object
     Exporter.write_obj(combined_model, f'./export/_{filename}.obj')
