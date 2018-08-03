@@ -77,11 +77,10 @@ class Shape:
             p1x, p1y = p2x, p2y
         return inside
 
-    def is_inside(self, other):
+    def is_inside(self, other, exclude=[]):
         if isinstance(other, Shape) and self != other:
             if self._bbox.is_inside(other._bbox):
-                shared = [u for u,v in self.get_identical_vertices(other)]
-                if all(self.__ray_tracing(v[0], v[1], other._vertices) for id, v in enumerate(self._vertices) if id not in shared):
+                if all(self.__ray_tracing(v[0], v[1], other._vertices) for id, v in enumerate(self._vertices) if id not in exclude):
                     return True
         return False
 
@@ -206,30 +205,32 @@ class Path:
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
     def split_shapes(self):
-        groups = {shape: [] for shape in self._shapes}
+        groups = {shape: ([], []) for shape in self._shapes}
         for outer, inner in groups.copy().items():
             for shape in self._shapes:
-                if shape.is_inside(outer):
-                    inner.append(shape)
+                shared_vertices = shape.get_identical_vertices(outer)
+                if shape.is_inside(outer, exclude=[u for u, v in shared_vertices]):
+                    inner[0].append(shape)
+                    inner[1] += shared_vertices
                     del groups[shape]
         return groups
 
     def triangulate(self):
         res = []
-        for outer, inner_shapes in self.split_shapes().items():
+        for outer, inner in self.split_shapes().items():
             # inner shape must be counter clockwise oriented
             if outer._orientation != ShapeOrientation.ORIENTATION_CCW:
                 outer.reverse()
             vertices = list(outer._vertices)
-            for shape in inner_shapes:
+            for shape in inner[0]:
                 #inner shape must be clockwise oriented
                 if shape._orientation !=  ShapeOrientation.ORIENTATION_CW:
                     shape.reverse()
 
-                shared_vertices = shape.get_identical_vertices(outer)
+                shared_vertices = inner[1]
                 if shared_vertices:
                     if len(shared_vertices) > 1:
-                        #todo: this needs a proper solution -> split into 3 outer shapes
+                        # raise RuntimeError("More than 1 shared vertex is not allowed.")
                         break;
                     #if there one shared vertice, use it as a bridge
                     inner_idx, outer_idx = shared_vertices[0]
@@ -248,7 +249,7 @@ class Path:
                     #if shared vertices are used, inner and outer point to bridge are the same
                     vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
 
-            res.append((Shape(vertices).triangulate(), outer, inner_shapes))
+            res.append((Shape(vertices).triangulate(), outer, inner))
         return res
 
     @staticmethod
