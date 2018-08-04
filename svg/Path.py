@@ -205,13 +205,12 @@ class Path:
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
     def split_shapes(self):
-        groups = {shape: ([], []) for shape in self._shapes}
+        groups = {shape: [] for shape in self._shapes}
         for outer, inner in groups.copy().items():
             for shape in self._shapes:
                 shared_vertices = shape.get_identical_vertices(outer)
                 if shape.is_inside(outer, exclude=[u for u, v in shared_vertices]):
-                    inner[0].append(shape)
-                    inner[1] += shared_vertices
+                    inner.append((shape, shared_vertices))
                     del groups[shape]
         return groups
 
@@ -222,16 +221,14 @@ class Path:
             if outer._orientation != ShapeOrientation.ORIENTATION_CCW:
                 outer.reverse()
             vertices = list(outer._vertices)
-            for shape in inner[0]:
+            for shape, shared_vertices in inner:
                 #inner shape must be clockwise oriented
                 if shape._orientation !=  ShapeOrientation.ORIENTATION_CW:
                     shape.reverse()
 
-                shared_vertices = inner[1]
                 if shared_vertices:
                     if len(shared_vertices) > 1:
-                        # raise RuntimeError("More than 1 shared vertex is not allowed.")
-                        break;
+                        raise RuntimeError("More than 1 shared vertex is not allowed.")
                     #if there one shared vertice, use it as a bridge
                     inner_idx, outer_idx = shared_vertices[0]
                 else:
