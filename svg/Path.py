@@ -204,14 +204,38 @@ class Path:
     def __read_vec(self, token):
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
+    def __merge_overlapping_shapes(self, outer, inner, shared_vertices):
+        return [outer]
+
     def split_shapes(self):
+        queue = self._shapes.copy()
         groups = {shape: [] for shape in self._shapes}
-        for outer, inner in groups.copy().items():
-            for shape in self._shapes:
-                shared_vertices = shape.get_identical_vertices(outer)
-                if shape.is_inside(outer, exclude=[u for u, v in shared_vertices]):
-                    inner.append((shape, shared_vertices))
-                    del groups[shape]
+        while queue:
+            outer = queue[0]
+            for inner in self._shapes:
+                if outer != inner:
+                    shared_vertices = inner.get_identical_vertices(outer)
+                    if inner.is_inside(outer, exclude=[u for u, v in shared_vertices]):
+                        if len(shared_vertices) > 1:
+                            queue += self.__merge_overlapping_shapes(outer, inner, shared_vertices)
+                            queue += [inner for inner, shared_vertices in groups[outer]]
+                            del groups[outer]
+                            del groups[inner]
+                            # update queue
+                            queue.remove(outer)
+                            queue.remove(inner)
+                        else:
+                            groups[outer].append((inner, shared_vertices))
+                            del groups[inner]
+                            #update queue
+                            queue.remove(outer)
+
+        # for outer, inner in groups.copy().items():
+        #     for shape in self._shapes:
+        #         shared_vertices = shape.get_identical_vertices(outer)
+        #         if shape.is_inside(outer, exclude=[u for u, v in shared_vertices]):
+        #             inner.append((shape, shared_vertices))
+        #             del groups[shape]
         return groups
 
     def triangulate(self):
