@@ -66,6 +66,10 @@ class Face:
     def _id(self):
         return self._model._faces.index(self)
 
+    @property
+    def _vertices(self):
+        return [self._model._vertices[v_id] for v_id in self._vertex_ids]
+
     def get_vertex(self, idx):
         return self._model._vertices[self._vertex_ids[idx]]
 
@@ -373,16 +377,28 @@ class Model:
     ####
 
     def extrude_face(self, face, dir, length):
-        pass
+        """Extrudes a single face, given a direction and a extrusion length"""
+        vertices = [v+dir*length for v in face._vertices]
+        #add new top face
+        self.add_face(vertices, face._tags)
+        #add side faces/quads
+        for i in range(len(vertices)):
+            self.add_face([face._vertices[i],
+                           face._vertices[(i+1)%len(vertices)],
+                           vertices[(i+1)%len(vertices)],
+                           vertices[i]])
+        #remove old face
+        self.remove_face(face)
 
     def extrude(self, length, faces=None, groups=None):
+        """Convenience method to extrude multiple faces/groups with a single call."""
         if faces is None and groups is None:
             raise RuntimeError("Either define faces or groups to be extruded.")
 
         if groups:
             raise RuntimeError("Groups are not supported yet.")
 
-        for face in faces:
+        for face in faces.copy():
             self.extrude_face(face, face._norm, length)
 
 if __name__ == "__main__":
