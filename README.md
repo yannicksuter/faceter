@@ -12,7 +12,6 @@ Script to explode a 3d (obj) file into printable pieces.
 
 ## Issues
 * BUG/model: faces added with area 0, this can happen with svg triangulation where vertices span a horizontal line.
-* TODO/Shape: inner shapes with >1 shared vertices cannot be triangulated 
 
 ## Requirements
 python 3.x

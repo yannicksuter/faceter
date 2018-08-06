@@ -188,6 +188,13 @@ class Model:
         cls._update()
         return cls
 
+    def _update(self):
+        self.calculate_centers()
+        self.calculate_neighbours()
+        self.calculate_vertice_norms()
+        self.calculate_face_norms()
+        self.calculate_boundingbox()
+
     def add_group(self, name):
         """Add and return new group or will return existing group"""
         name = name.replace(' ', '_')
@@ -361,12 +368,22 @@ class Model:
         self._update()
         print(f'Triangulation: Face count {face_count_before} before -> {len(self._faces)} after')
 
-    def _update(self):
-        self.calculate_centers()
-        self.calculate_neighbours()
-        self.calculate_vertice_norms()
-        self.calculate_face_norms()
-        self.calculate_boundingbox()
+    ####
+    ## Extrude
+    ####
+
+    def extrude_face(self, face, dir, length):
+        pass
+
+    def extrude(self, length, faces=None, groups=None):
+        if faces is None and groups is None:
+            raise RuntimeError("Either define faces or groups to be extruded.")
+
+        if groups:
+            raise RuntimeError("Groups are not supported yet.")
+
+        for face in faces:
+            self.extrude_face(face, face._norm, length)
 
 if __name__ == "__main__":
     obj_data = ObjLoader.ObjLoader('./example/cube.obj')
