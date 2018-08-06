@@ -204,12 +204,30 @@ class Path:
     def __read_vec(self, token):
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
+    def get_sublist_cycled(self, list, start, end):
+        # print(f'{start} -> {end}')
+        # print(f'{[i%len(list) for i in range(start+len(list), end+1+len(list))]}')
+        start = start
+        end = end if end > start else end + len(list)
+        return [list[i%len(list)] for i in range(start, end)]
+
     def __merge_overlapping_shapes(self, outer, inner, shared_vertices):
-        return [outer]
+        new_shapes = []
+        for idx, start_io in enumerate(shared_vertices):
+            end_io = shared_vertices[(idx+1)%len(shared_vertices)]
+
+            # print(f'{start_io[0]} -> {end_io[0]}({end_io[1]}) -> {start_io[1]}({start_io[0]})')
+            vertices = self.get_sublist_cycled(inner._vertices, start_io[0], end_io[0])
+            vertices += self.get_sublist_cycled(outer._vertices, end_io[1], start_io[1])
+
+            new_shapes.append(Shape(vertices))
+
+        return new_shapes
 
     def split_shapes(self):
         queue = self._shapes.copy()
         groups = {shape: [] for shape in self._shapes}
+
         while queue:
             outer = queue[0]
             for inner in self._shapes:
@@ -217,25 +235,34 @@ class Path:
                     shared_vertices = inner.get_identical_vertices(outer)
                     if inner.is_inside(outer, exclude=[u for u, v in shared_vertices]):
                         if len(shared_vertices) > 1:
-                            queue += self.__merge_overlapping_shapes(outer, inner, shared_vertices)
-                            queue += [inner for inner, shared_vertices in groups[outer]]
-                            del groups[outer]
-                            del groups[inner]
+                            new_outer_shapes = self.__merge_overlapping_shapes(outer, inner, shared_vertices)
+                            #add new shapes to queue for inner/outer testing
+                            queue += new_outer_shapes
+                            #add new shapes as outer shapes (default)
+                            for no_shape in new_outer_shapes:
+                                groups[no_shape] = []
+                            # dissolve outer shape
+                            if outer in groups:
+                                # if outer shaper had already inner shapes, add them to queue to revalidate befor deleting group
+                                queue += [inner for inner, shared_vertices in groups[outer]]
+                                del groups[outer]
+                            # dissolve inner shape
+                            if inner in groups:
+                                del groups[inner]
                             # update queue
-                            queue.remove(outer)
-                            queue.remove(inner)
+                            try:
+                                queue.remove(inner)
+                            except ValueError:
+                                pass  # do nothing!
                         else:
                             groups[outer].append((inner, shared_vertices))
-                            del groups[inner]
-                            #update queue
-                            queue.remove(outer)
+                            if inner in groups:
+                                del groups[inner]
+            try:
+                queue.remove(outer)
+            except ValueError:
+                pass  # do nothing!
 
-        # for outer, inner in groups.copy().items():
-        #     for shape in self._shapes:
-        #         shared_vertices = shape.get_identical_vertices(outer)
-        #         if shape.is_inside(outer, exclude=[u for u, v in shared_vertices]):
-        #             inner.append((shape, shared_vertices))
-        #             del groups[shape]
         return groups
 
     def triangulate(self):
@@ -298,15 +325,15 @@ class Path:
 if __name__ == "__main__":
     # filename = '0123'
     # filename = 'yannick'
-    filename = 'yannick2'
-    # filename = 'test'
+    # filename = 'yannick2'
+    filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
     # paths = Path.read(f'./example/svg/yannick2.svg')
     # paths = Path.read(f'./example/svg/test.svg')
 
     combined_model = Model()
-    for path in paths[1:2]:
+    for path in paths:
         print(f'triangulating path={path._id} shapes={len(path._shapes)}')
         path_models = path.triangulate()
         for m in path_models:
