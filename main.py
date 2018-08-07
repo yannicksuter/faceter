@@ -4,7 +4,7 @@
 import ObjLoader, math
 from Shell import *
 from Exporter import Exporter
-from Model import Model
+from model import *
 from Facet import Facet
 
 def export_centered(model, filename, orientation_vec=None):
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         face_surface = face.get_area()
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
         facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
-        faceted_model.merge_model(facet, group_name=f'facet_{face_id}')
+        faceted_model.merge(facet, group_name=f'facet_{face_id}')
 
     faceted_model.triangulate()
 

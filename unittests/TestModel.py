@@ -1,8 +1,6 @@
 import unittest
-
 import ObjLoader
-import numpy as np
-from Model import Model
+from model import *
 
 class TestModel(unittest.TestCase):
     def test_simplify_quad(self):

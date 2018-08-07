@@ -7,8 +7,7 @@ import math
 from enum import Enum
 import itertools
 
-from Plane import Plane
-from Model import Model
+from model import *
 from Exporter import Exporter
 from VecMath import VecMath as vm
 

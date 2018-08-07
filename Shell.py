@@ -1,6 +1,6 @@
 import sys
 from VecMath import VecMath as vm
-from Model import Model
+from model import *
 from Plane import Plane
 
 def get_first_plane(vertex, faces):

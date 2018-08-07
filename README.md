@@ -2,6 +2,7 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
+* add material support to OBJ export
 * add shape embedding
 * improving rev-triangulation algorithm to be also robust with polygon(P>4)
 ** use ear clipping approach for 3d (P>4) polygon

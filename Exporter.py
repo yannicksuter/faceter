@@ -1,7 +1,7 @@
 import os, datetime
 import numpy as np
 from VecMath import VecMath
-from Model import *
+from model import *
 
 def write_obj_vertices(file, model, vertex_offset):
     """Write vertices to obj file"""
@@ -44,16 +44,28 @@ class Exporter:
             model._vertices[idx] = np.array(vertex+v)
 
     @staticmethod
+    def write_mtl(model, path, filename):
+        filename, ext = os.path.splitext(filename)
+        mtl_filename = os.path.join(path, f'{filename}.mtl')
+        with open(mtl_filename, 'w') as mtl_file:
+            mtl_file.write('newmtl default_mat\n')
+            mtl_file.write('Ka 1.000 1.000 1.000\n') # ambient color
+        print(f'{filename}.mtl written.')
+
+    @staticmethod
     def write_obj(model, export_filepath, offset=None):
         try:
             path, filename = os.path.split(export_filepath)
+            #write material library
+            Exporter.write_mtl(model, path, filename)
+            #write wavefront file
             with open(export_filepath, 'w') as obj_export:
                 obj_export.write(f'# {filename}\n#\n')
                 write_obj_vertices(obj_export, model, offset)
                 write_obj_normals(obj_export, model)
                 for group in model._groups:
                     write_obj_facegroup(obj_export, model, group)
-                print(f'Export: {filename} written. (Vertices: {len(model._vertices)} Faces: {len(model._faces)})')
+                print(f'{filename} written. (Vertices: {len(model._vertices)} Faces: {len(model._faces)})')
         except:
             print(f'Export: {export_filepath} file could not be written.')
 
@@ -73,54 +85,3 @@ class Exporter:
                     print(f'Export: {filename_group} written. (Vertices: {len(model._vertices)} Faces: {len(group._faces)})')
         except:
             print(f'Export: {export_filepath} file could not be written.')
-
-    STL_AUTO = 0
-    STL_ASCII = 1
-    STL_BINARY = 2
-
-    @staticmethod
-    def write_stl(model, export_filepath, mode=STL_ASCII):
-        filename = os.path.split(export_filepath)[-1]
-
-        if mode is Exporter.STL_ASCII:
-            save_func = Exporter.__save_stl_ascii
-        else:
-            save_func = Exporter.__save_stl_binary
-
-        with open(export_filepath, 'w') as fh:
-            save_func(fh, filename, model)
-            print(f'Export: {filename} successfully written.')
-
-    @staticmethod
-    def __save_stl_binary(fh, name, model):
-        raise NotImplementedError
-
-    @staticmethod
-    def __save_stl_ascii(fh, name, model):
-        fh.write(f'solid {name}\n')
-        for i in range(len(model._faces)):
-            face = model._faces[i]
-            fh.write("facet normal %f %f %f\n" % tuple(face._norm[:3]))
-            fh.write("  outer loop\n")
-            for v_id in face._vertex_ids:
-                fh.write("    vertex %f %f %f\n" % tuple(model._vertices[v_id][:3]))
-            fh.write('  endloop\n')
-            fh.write('endfacet\n')
-            fh.write(f'endsolid {name}\n')
-
-if __name__ == "__main__":
-    import ObjLoader
-    obj_data = ObjLoader.ObjLoader('./example/cube.obj')
-    obj_model = Model.load_fromdata(obj_data)
-
-    obj_model.simplify()
-
-    obj_model.add_group('cube2')
-    for face in list(obj_model._faces):
-        vertices = []
-        for idx in face._vertex_ids:
-            vertices.append(obj_model._vertices[idx] + obj_model.get_size())
-        obj_model.add_face(vertices)
-
-    Exporter.write_obj(obj_model, './export/_cube.obj')
-    Exporter.write_obj_split(obj_model, './export/_cube.obj')

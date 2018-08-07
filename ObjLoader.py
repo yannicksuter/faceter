@@ -7,8 +7,6 @@ def catch(func, handle=lambda e : e, *args, **kwargs):
         # return handle(e)
         return None
 
-
-
 class ObjLoader(object):
     def __init__(self, fileName):
         print(f'Loading {fileName} ...')
@@ -55,6 +53,45 @@ class ObjLoader(object):
                         self._faces.append(face)
         except IOError:
             print(f'Error loading {fileName}. File not found.')
+
+    def load_material_library(self, path, filename):
+        material = None
+        file = self.open_material_file(filename)
+
+        for line in file:
+            if line.startswith('#'):
+                continue
+            values = line.split()
+            if not values:
+                continue
+
+            if values[0] == 'newmtl':
+                material = Material(values[1])
+                self.materials[material.name] = material
+            elif material is None:
+                logging.warn('Expected "newmtl" in %s' % filename)
+                continue
+
+            try:
+                if values[0] == 'Kd':
+                    material.diffuse = map(float, values[1:])
+                elif values[0] == 'Ka':
+                    material.ambient = map(float, values[1:])
+                elif values[0] == 'Ks':
+                    material.specular = map(float, values[1:])
+                elif values[0] == 'Ke':
+                    material.emissive = map(float, values[1:])
+                elif values[0] == 'Ns':
+                    material.shininess = float(values[1])
+                elif values[0] == 'd':
+                    material.opacity = float(values[1])
+                elif values[0] == 'map_Kd':
+                    try:
+                        material.texture = pyglet.resource.image(values[1]).texture
+                    except BaseException as ex:
+                        logging.warn('Could not load texture %s: %s' % (values[1], ex))
+            except BaseException as ex:
+                logging.warn('Parse error in %s.' % (filename, ex))
 
     def __remove_comments(self, line):
         try:

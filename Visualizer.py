@@ -1,13 +1,38 @@
-import os
+import logging
 
 import pyglet
-from pyglet.gl import gl
-from pyglet.gl import glu
-
-from Scene import Scene
+from pyglet.gl import *
 
 # colors
 black = (0, 0, 0, 1)
+dark_gray = (.75, .75, .75, 1)
+
+class Scene:
+    def __init__(self, x=0, y=0, z=0, color=dark_gray):
+        # translation and rotation values
+        self.x, self.y, self.z = x, y, z
+        self.rx = self.ry = self.rz = 0
+
+        # color of the model
+        self.color = color
+
+        # models
+        self.models = []
+
+    def clear(self):
+        self.facets = self.facets[:]
+
+    def draw(self):
+        gl.glLoadIdentity()
+        gl.glTranslatef(self.x, self.y, self.z)
+        gl.glRotatef(self.rx, 1, 0, 0)
+        gl.glRotatef(self.ry, 0, 1, 0)
+        gl.glRotatef(self.rz, 0, 0, 1)
+
+        # sets the color
+        gl.glColor4f(*self.color)
+        for facet in self.facets:
+            facet.draw()
 
 class Window(pyglet.window.Window):
     def __init__(self, width, height, caption, resizable=False):
@@ -71,9 +96,14 @@ class Window(pyglet.window.Window):
                 self.scene.x += dx / 100.0
                 self.scene.y += dy / 100.0
 
-    # def show(self):
-
-def show(facets):
+def show(model):
     window = Window(width=1024, height=768, caption='Faceter (Preview)', resizable=False)
-    window.scene.facets += facets
+    window.scene.models += model
     pyglet.app.run()
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        logging.error("Usage: %s file.obj" % sys.argv[0])
+    else:
+
+        show(model)

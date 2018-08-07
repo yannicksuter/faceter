@@ -1,4 +1,4 @@
-from Model import *
+from model import *
 from Exporter import Exporter
 
 def generate_facet(dest_model, source_model, face, brick_height, top_height, top_size):
