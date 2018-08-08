@@ -1,0 +1,3 @@
+[submodule "euclid"]
+	path = euclid
+	url = https://github.com/ezag/pyeuclid
