@@ -278,4 +278,4 @@ if __name__ == "__main__":
 
     # export to obj file
     obj_model._update()
-    Exporter.write_obj(obj_model, f'./export/_delanay2d.obj', -obj_model.get_center())
+    Exporter.write_obj(obj_model, f'./export/_delanay2d.obj', -obj_model._center)

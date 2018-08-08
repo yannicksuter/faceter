@@ -1,7 +1,11 @@
+import numpy as np
+from model.Material import Material
+
 class Group:
     def __init__(self, model, name):
         self._model = model
         self._name = name
+        self._material = Material(name)
 
     @property
     def _faces(self):

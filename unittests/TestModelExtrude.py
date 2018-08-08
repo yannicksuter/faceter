@@ -12,5 +12,5 @@ if __name__ == "__main__":
 
     obj_model.extrude(5., faces=obj_model._faces)
 
-    Exporter.translate(obj_model, -obj_model.get_center())  # center object
+    Exporter.translate(obj_model, -obj_model._center)  # center object
     Exporter.write_obj(obj_model, f'../export/_{filename}_extruded.obj')

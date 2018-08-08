@@ -1,5 +1,5 @@
 class Material:
-    _diffuse = [.8, .8, .8]
+    _diffuse = [1., 1., 1.]
     _ambient = [.2, .2, .2]
     _specular = [0., 0., 0.]
     _emission = [0., 0., 0.]

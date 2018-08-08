@@ -64,7 +64,7 @@ class TestModel(unittest.TestCase):
     def test_cube_bbox(self):
         obj_data = ObjLoader.ObjLoader('../example/cube.obj')
         obj_model = Model.load_fromdata(obj_data)
-        size = obj_model.get_size()
+        size = obj_model._size
         self.assertTrue(size[0] == 1.)
         self.assertTrue(size[1] == 1.)
         self.assertTrue(size[2] == 1.)

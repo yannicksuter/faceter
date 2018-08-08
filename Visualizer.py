@@ -96,24 +96,26 @@ class Scene:
         self.normalize = True
 
     def add_model(self, model):
-        center = model.get_center()
+        center = model._center
         self.translate(-center[0], -center[1], -center[2])
-        vertices = []
-        normals = []
-        for face in model._faces:
-            for tv in face._vertices:
-                v = self._transforms * euclid.Point3(tv[0], tv[1], tv[2])
-                vertices.extend(v[:])
-                n = self._transforms * euclid.Point3(face._norm[0], face._norm[1], face._norm[2]).normalized()
-                normals.extend(n[:])
+        for group in model._groups:
+            vertices = []
+            normals = []
+            for face in group._faces:
+                for tv in face._vertices:
+                    v = self._transforms * euclid.Point3(tv[0], tv[1], tv[2])
+                    vertices.extend(v[:])
+                    n = self._transforms * euclid.Point3(face._norm[0], face._norm[1], face._norm[2]).normalized()
+                    normals.extend(n[:])
 
-        material = Material('default')
-        self._batch.add(len(vertices) // 3,
-                  GL_TRIANGLES,
-                  material,
-                  ('v3f/static', tuple(vertices)),
-                  ('n3f/static', tuple(normals)),
-                  )
+            material = Material(group._material._name)
+            material.diffuse = group._material._diffuse
+            self._batch.add(len(vertices) // 3,
+                      GL_TRIANGLES,
+                      material,
+                      ('v3f/static', tuple(vertices)),
+                      ('n3f/static', tuple(normals)),
+                      )
 
     def draw(self):
         gl.glLoadIdentity()
@@ -202,7 +204,8 @@ if __name__ == "__main__":
     filename = 'cube'
     obj_data = ObjLoader.ObjLoader(f'./example/{filename}.obj')
     obj_model = model.Model.load_fromdata(obj_data, scale=10)
-    # obj_model.simplify()
+    obj_model.simplify()
+    obj_model._groups[0]._material._diffuse = [1., 0., 0.]
     obj_model.extrude(5., faces=obj_model._faces)
 
     window = Window(width=1024, height=768, caption='Faceter (Preview)', resizable=False)

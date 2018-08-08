@@ -1,3 +1,4 @@
+import math
 from model import *
 from Exporter import Exporter
 
@@ -56,7 +57,7 @@ if __name__ == "__main__":
 
     print(f'Faces: {len(obj_model._faces)}')
     print(f'Vertices: {len(obj_model._vertices)}')
-    bbox_size = obj_model.get_size()
+    bbox_size = obj_model._size
     print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
     # Exporter.write(obj_model, f'./export/_{obj_name}.obj')

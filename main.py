@@ -9,7 +9,7 @@ from Facet import Facet
 
 def export_centered(model, filename, orientation_vec=None):
     model._update()
-    Exporter.translate(model, -model.get_center()) # center object
+    Exporter.translate(model, -model._center) # center object
     model._update()
     if orientation_vec is not None:
         Exporter.rotate_model(model, orientation_vec) # rotate for optimal printing
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     print(f'Faces: {len(obj_model._faces)}')
     print(f'Vertices: {len(obj_model._vertices)}')
-    bbox_size = obj_model.get_size()
+    bbox_size = obj_model._size
     print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
     target_lid_size = 100. #mm^2
@@ -51,4 +51,4 @@ if __name__ == "__main__":
         generate_shell(model, thickness, visibility)
         export_centered(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 
-    Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj', -faceted_model.get_center())
+    Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj', -faceted_model._center)

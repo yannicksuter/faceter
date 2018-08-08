@@ -28,7 +28,8 @@ class BoundingBox:
               return True
         return False
 
-    def get_size(self):
+    @property
+    def _size(self):
         """Get size of bounding box."""
         return np.absolute(self._max - self._min)
 
@@ -340,5 +341,5 @@ if __name__ == "__main__":
 
     combined_model.flip(axis_y=True)
 
-    Exporter.translate(combined_model, -combined_model.get_center())  # center object
+    Exporter.translate(combined_model, -combined_model._center)  # center object
     Exporter.write_obj(combined_model, f'./export/_{filename}.obj')

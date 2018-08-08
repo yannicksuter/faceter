@@ -113,13 +113,15 @@ class Model:
         else:
             self._bbox = [np.array([0., 0., 0.]), np.array([0., 0., 0.])]
 
-    def get_size(self):
+    @property
+    def _size(self):
         """ Get size of bounding box """
         return np.absolute(self._bbox[1] - self._bbox[0])
 
-    def get_center(self):
+    @property
+    def _center(self):
         """ Get size of bounding box """
-        return self._bbox[0] + self.get_size() * 0.5
+        return self._bbox[0] + self._size * 0.5
 
     def get_faces_with_vertex_id(self, vertex_id, in_group=None):
         """ Get list of faces that use vertex (defined bt vertex_id) """
@@ -171,7 +173,7 @@ class Model:
 
     def flip(self, axis_y=False):
         if axis_y:
-            c = self.get_center()
+            c = self._center
             for vertex in self._vertices:
                 vertex[1] = c[1] - (vertex[1]-c[1])
             for face in self._faces:
@@ -220,12 +222,13 @@ class Model:
     ## Extrude
     ####
 
-    def extrude_face(self, face, dir, length):
+    def extrude_face(self, face, dir, length, group=None):
         """Extrudes a single face, given a direction and a extrusion length"""
         vertices = [v+dir*length for v in face._vertices]
         #add new top face
-        self.add_face(vertices, face._tags)
+        self.add_face(vertices, tags=face._tags, group=face._group)
         #add side faces/quads
+        self._cur_group = group
         for i in range(len(vertices)):
             self.add_face([face._vertices[i],
                            face._vertices[(i+1)%len(vertices)],
@@ -234,13 +237,8 @@ class Model:
         #remove old face
         self.remove_face(face)
 
-    def extrude(self, length, faces=None, groups=None):
+    def extrude(self, length, faces=None, group=None):
         """Convenience method to extrude multiple faces/groups with a single call."""
-        if faces is None and groups is None:
-            raise RuntimeError("Either define faces or groups to be extruded.")
-
-        if groups:
-            raise RuntimeError("Groups are not supported yet.")
-
-        for face in faces.copy():
-            self.extrude_face(face, face._norm, length)
+        if faces:
+            for face in faces.copy():
+                self.extrude_face(face, face._norm, length, group=group)

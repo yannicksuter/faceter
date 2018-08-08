@@ -4,8 +4,6 @@ Script to explode a 3d (obj) file into printable pieces.
 ## WhereWasI
 * add material support to OBJ export
 * add material support to OBJ import
-* add material support model
-* implement model viewer
 * refactor to use euclid library
 * add shape embedding
 * improving rev-triangulation algorithm to be also robust with polygon(P>4)
