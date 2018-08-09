@@ -40,6 +40,8 @@ if __name__ == "__main__":
 
     faceted_model.triangulate()
 
+    shell_model = Model()
+
     for idx, group in enumerate(faceted_model._groups):
         model = faceted_model.get_group_model(group)
         thickness = [2.] * len(model._faces)
@@ -49,6 +51,8 @@ if __name__ == "__main__":
         for face in model.get_faces_by_tag('top'):
             visibility[face._id] = False  # top face is removed
         generate_shell(model, thickness, visibility)
+        shell_model.merge(model, group_name=group._name)
         export_centered(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 
     Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj', -faceted_model._center)
+    Exporter.write_obj(shell_model, f'./export/_{obj_name}_shell.obj', -shell_model._center)

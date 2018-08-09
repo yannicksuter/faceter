@@ -59,9 +59,10 @@ class ObjLoader(object):
                         material = self._materials.get(values[1], None)
                         if material is None:
                             logging.warning('Unknown material: %s' % values[1])
+                            material = model.Material("<unknown>")
                         if mesh is not None:
                             group = MaterialGroup(material)
-                            mesh.groups.append(group)
+                            mesh._groups.append(group)
                     elif values[0] == 'v':
                         vertex = list(map(float, values[1:4]))
                         self._vertices.append(vertex)
@@ -91,38 +92,41 @@ class ObjLoader(object):
 
     def load_material_library(self, filename):
         material = None
-        file = self.open_material_file(filename)
-        for line in file:
-            if line.startswith('#'):
-                continue
-            values = line.split()
-            if not values:
-                continue
+        try:
+            with open(filename) as file:
+                for line in file:
+                    if line.startswith('#'):
+                        continue
+                    values = line.split()
+                    if not values:
+                        continue
 
-            if values[0] == 'newmtl':
-                material = model.Material(values[1])
-                self._materials[material._name] = material
-            elif material is None:
-                logging.warning('Expected "newmtl" in %s' % filename)
-                continue
+                    if values[0] == 'newmtl':
+                        material = model.Material(values[1])
+                        self._materials[material._name] = material
+                    elif material is None:
+                        logging.warning('Expected "newmtl" in %s' % filename)
+                        continue
 
-            try:
-                if values[0] == 'Kd':
-                    material._diffuse = map(float, values[1:])
-                elif values[0] == 'Ka':
-                    material._ambient = map(float, values[1:])
-                elif values[0] == 'Ks':
-                    material._specular = map(float, values[1:])
-                elif values[0] == 'Ke':
-                    material._emissive = map(float, values[1:])
-                elif values[0] == 'Ns':
-                    material._shininess = float(values[1])
-                elif values[0] == 'd':
-                    material._opacity = float(values[1])
-                elif values[0] == 'map_Kd':
-                    material._texture = values[1]
-            except BaseException as ex:
-                logging.warning('Parse error in %s.' % (filename, ex))
+                    try:
+                        if values[0] == 'Kd':
+                            material._diffuse = map(float, values[1:])
+                        elif values[0] == 'Ka':
+                            material._ambient = map(float, values[1:])
+                        elif values[0] == 'Ks':
+                            material._specular = map(float, values[1:])
+                        elif values[0] == 'Ke':
+                            material._emissive = map(float, values[1:])
+                        elif values[0] == 'Ns':
+                            material._shininess = float(values[1])
+                        elif values[0] == 'd':
+                            material._opacity = float(values[1])
+                        elif values[0] == 'map_Kd':
+                            material._texture = values[1]
+                    except BaseException as ex:
+                        logging.warning('Parse error in %s.' % (filename, ex))
+        except IOError:
+            print(f'Error loading {filename}. File not found.')
 
     def __remove_comments(self, line):
         try:

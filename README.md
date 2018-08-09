@@ -10,6 +10,7 @@ Script to explode a 3d (obj) file into printable pieces.
 * refactor visualizer to render model-class objects
 * add material support to OBJ export
 * add material support to OBJ import
+* get rid of Exporter.translate(...) as it's destroying the model -> use euclid/transform vertex befor exporting/writing instead
 
 ## Issues
 * BUG/model: faces added with area 0, this can happen with svg triangulation where vertices span a horizontal line.

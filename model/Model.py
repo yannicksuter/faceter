@@ -24,14 +24,14 @@ class Model:
             cls._vertices.append(np.array(v)*scale)
 
         cls._faces = []
-        for group in obj_data._groups:
-            cls.set_group(group[0])
-            for face_data in group[1]:
-                vertex_ids = []
-                for f_id, t_id, n_id in face_data:
-                    f_id -= 1
-                    vertex_ids.append(f_id)
-                cls._faces.append(Face(cls, cls._cur_group, vertex_ids))
+        for mesh_idx, mesh in enumerate(obj_data._meshes.values()):
+            for group_idx, group in enumerate(mesh._groups):
+                cls.set_group(f'{mesh._name}/{group._material._name}')
+                for face in group._faces:
+                    vertex_ids = []
+                    for f_id, t_id, n_id in face:
+                        vertex_ids.append(f_id-1)
+                    cls._faces.append(Face(cls, cls._cur_group, vertex_ids))
 
         cls._update()
         return cls
@@ -71,7 +71,7 @@ class Model:
         return model
 
     def get_faces_by_tag(self, tag):
-        return [face for face in self._faces if face._tags == tag]
+        return [face for face in self._faces if tag in face._tags]
 
     def calculate_centers(self):
         for face in self._faces:
