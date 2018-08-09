@@ -41,7 +41,7 @@ class VecMath:
         return np.linalg.norm(np.abs(np.cross(line_dir, line_point - point) / np.linalg.norm(line_dir)))
 
     @staticmethod
-    def get_rotation_matrix(ref_vec, to_vec=np.array([1., 0., 0.])):
+    def rotate_fromto_matrix(ref_vec, to_vec=np.array([1., 0., 0.])):
         a, b = VecMath.unit_vector(ref_vec), VecMath.unit_vector(to_vec)
 
         if VecMath.angle_between(a,b) == 0:
@@ -59,7 +59,3 @@ class VecMath:
         r = I + k + np.matmul(k, k) * ((1 - c) / (s ** 2))
 
         return r
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

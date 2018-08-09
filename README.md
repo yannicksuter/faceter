@@ -6,7 +6,7 @@ Script to explode a 3d (obj) file into printable pieces.
 * improving rev-triangulation algorithm to be also robust with polygon(P>4) -> use ear clipping approach for 3d (P>4) polygon
 * generate interesting triangle fields, first attempt using delaunay
 * refactor to use euclid library
-* get rid of Exporter.translate(...) as it's destroying the model -> use euclid/transform vertex befor exporting/writing instead
+* refactor VecMath -> remove class
 
 ## Issues
 * BUG/model: faces added with area 0, this can happen with svg triangulation where vertices span a horizontal line.

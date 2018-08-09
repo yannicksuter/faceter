@@ -1,6 +1,6 @@
 import math
 from model import *
-from Exporter import Exporter
+import Exporter
 
 def generate_facet(dest_model, source_model, face, brick_height, top_height, top_size):
     # define upper and lower vertices

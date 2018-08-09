@@ -8,7 +8,6 @@ def catch(func, handle=lambda e : e, *args, **kwargs):
     try:
         return func(*args, **kwargs)
     except Exception as e:
-        # return handle(e)
         return None
 
 class MaterialGroup(object):

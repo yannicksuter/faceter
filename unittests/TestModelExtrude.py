@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import ObjLoader
-from Exporter import *
+import Exporter
 from model import Model
 
 if __name__ == "__main__":
@@ -13,5 +13,4 @@ if __name__ == "__main__":
     obj_model._groups[0]._material._diffuse = [1., 0., 0.]
     obj_model.extrude(5., faces=obj_model._faces)
 
-    translate(obj_model, -obj_model._center)  # center object
-    write_obj(obj_model, f'../export/_{filename}_extruded.obj')
+    Exporter.write(obj_model, f'../export/_{filename}_extruded.obj')

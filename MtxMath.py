@@ -1,4 +1,14 @@
-import numpy as np
+from euclid import euclid
 
-def get_translation_mtx(v):
-    return np.matrix('{} {} {} {}; {} {} {} {}; {} {} {} {}; {} {} {} {}'.format(1, 0, 0, v[0], 0, 1, 0, v[1], 0, 0, 1, v[2], 0, 0, 0, 1))
+def conv_to_euclid(np_m):
+    m = euclid.Matrix4.new_identity()
+    m.a = np_m.item((0,0))
+    m.b = np_m.item((0,1))
+    m.c = np_m.item((0,2))
+    m.e = np_m.item((1,0))
+    m.f = np_m.item((1,1))
+    m.g = np_m.item((1,2))
+    m.i = np_m.item((2,0))
+    m.j = np_m.item((2,1))
+    m.k = np_m.item((2,2))
+    return m

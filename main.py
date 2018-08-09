@@ -2,20 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import ObjLoader, math
+import Exporter
 from Shell import *
-from Exporter import Exporter
 from model import *
 from Facet import Facet
-
-def export_centered(model, filename, orientation_vec=None):
-    model._update()
-    Exporter.translate(model, -model._center) # center object
-    model._update()
-    if orientation_vec is not None:
-        Exporter.rotate_model(model, orientation_vec) # rotate for optimal printing
-    model._update()
-    # Exporter.write_obj(model, filename, offset=-model.get_center())
-    Exporter.write_obj(model, filename)
 
 if __name__ == "__main__":
     obj_name = 'abstract'
@@ -52,7 +42,7 @@ if __name__ == "__main__":
             visibility[face._id] = False  # top face is removed
         generate_shell(model, thickness, visibility)
         shell_model.merge(model, group_name=group._name)
-        export_centered(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
+        Exporter.write(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 
-    Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj', -faceted_model._center)
-    Exporter.write_obj(shell_model, f'./export/_{obj_name}_shell.obj', -shell_model._center)
+    Exporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')
+    Exporter.write(shell_model, f'./export/_{obj_name}_shell.obj')
