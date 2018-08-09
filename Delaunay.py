@@ -12,10 +12,10 @@ Robust checks disabled by default. May not work in degenerate set of points.
 """
 
 import numpy as np
-from math import sqrt
-from Model import Model
-from Exporter import Exporter
-from VecMath import VecMath
+from model import Model
+import math
+import Exporter
+import VecMath
 
 class Delaunay2D:
     """
@@ -180,7 +180,7 @@ class Delaunay2D:
 
         # Filter out triangles with any vertex in the extended BBox
         # Do sqrt of radius before of return
-        return [(self.circles[(a, b, c)][0], sqrt(self.circles[(a, b, c)][1]))
+        return [(self.circles[(a, b, c)][0], math.sqrt(self.circles[(a, b, c)][1]))
                 for (a, b, c) in self.triangles if a > 3 and b > 3 and c > 3]
 
     def exportDT(self):

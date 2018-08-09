@@ -9,7 +9,7 @@ import model
 import ctypes, math
 import pyglet
 from pyglet.gl import *
-# import euclid
+
 from euclid import euclid
 
 
@@ -173,8 +173,10 @@ class Window(pyglet.window.Window):
 
             if self.wireframe:
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+                glDisable(GL_LIGHTING)
             else:
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+                glEnable(GL_LIGHTING)
 
             # draws the current scene
             self.scene.draw()

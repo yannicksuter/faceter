@@ -60,8 +60,7 @@ if __name__ == "__main__":
     bbox_size = obj_model._size
     print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
-    # Exporter.write(obj_model, f'./export/_{obj_name}.obj')
-    Exporter.write_stl(obj_model, f'./export/_{obj_name}.stl')
+    Exporter.write(obj_model, f'./export/_{obj_name}.obj')
 
     target_lid_size = 100. #mm^2
 
@@ -75,13 +74,10 @@ if __name__ == "__main__":
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
 
         facet = Facet(ref_face, obj_model, brick_height=10., top_height=15., top_size=ttop_size)
-        faceted_model.merge_model(facet)
-
-        Exporter.rotate_model(facet, obj_model._faces[face_id]._norm)
-        facet._update()
+        faceted_model.merge(facet)
 
         # export single part
-        Exporter.write_obj(facet, f'./export/_{obj_name}_part_{face_id+1}.obj')
+        Exporter.write(facet, f'./export/_{obj_name}_part_{face_id+1}.obj', obj_model._faces[face_id]._norm)
 
     # faceted_model.triangulate()
-    Exporter.write_obj(faceted_model, f'./export/_{obj_name}_faceted.obj')
+    Exporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')

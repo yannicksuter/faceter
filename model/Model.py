@@ -2,7 +2,7 @@ import numpy as np
 
 from model.Face import Face
 from model.Group import Group
-from VecMath import VecMath
+import VecMath
 
 class Model:
     def __init__(self):

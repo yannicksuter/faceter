@@ -1,7 +1,5 @@
-from VecMath import VecMath
 import numpy as np
-from VecMath import VecMath as vm
-
+import VecMath as vm
 
 class Plane:
     def __init__(self, point, norm, ref_id=None):
@@ -14,7 +12,7 @@ class Plane:
     @classmethod
     def from_points(cls, p0, p1, p2, norm_dir = 1.):
         """ Create a plane from 3 points that span the plane """
-        return Plane(p0, VecMath.unit_vector(np.cross(p1 - p0, p2 - p0) * norm_dir))
+        return Plane(p0, vm.unit_vector(np.cross(p1 - p0, p2 - p0) * norm_dir))
 
     def angle_between(self, other):
         """ Return the angle in radians between this plane and another plane or vector """
@@ -23,7 +21,7 @@ class Plane:
         elif len(other) == 3:
         # elif isinstance(other, np.array) and len(other) == 3:
             other_v = other
-        return VecMath.angle_between(self._norm, other_v)
+        return vm.angle_between(self._norm, other_v)
 
     def intersect_with_plane(self, other_plane, epsilon=1e-6):
         """Finds the intersection of this plane with another plane. """

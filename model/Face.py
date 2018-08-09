@@ -1,7 +1,7 @@
 import numpy as np
 import math
+import VecMath
 from model import *
-from VecMath import VecMath
 
 class Face:
     def __init__(self, model, group, vertex_ids, tags=[]):

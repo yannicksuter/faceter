@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from VecMath import VecMath
+import VecMath
 import MtxMath
 from euclid import euclid
 

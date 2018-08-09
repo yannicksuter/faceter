@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from VecMath import VecMath
+import VecMath
 
 class TestVecMath(unittest.TestCase):
     def test_unit_vector(self):
@@ -15,7 +15,7 @@ class TestVecMath(unittest.TestCase):
     def test_get_rotation_mtx(self):
         a = np.array([1., 0., 0.])
         b = np.array([0., 1., 0.])
-        rot = VecMath.get_rotation_matrix(a, b)
+        rot = VecMath.rotate_fromto_matrix(a, b)
         self.assertIsNotNone(rot)
 
         a2 = rot.__matmul__(a)
@@ -26,7 +26,7 @@ class TestVecMath(unittest.TestCase):
         """ edge case: would normaly break rot mtx. use identity mtx instead """
         a = np.array([1., 0., 0.])
         b = np.array([1., 0., 0.])
-        rot = VecMath.get_rotation_matrix(a, b)
+        rot = VecMath.rotate_fromto_matrix(a, b)
         self.assertIsNotNone(rot)
 
         a2 = rot.__matmul__(a)
@@ -44,7 +44,7 @@ class TestVecMath(unittest.TestCase):
         line_dir = np.array([1., 1.,1.])
 
         dist = VecMath.dist_point_to_line(line_p, line_dir, np.array([0., .2, .5]))
-        self.assertEqual(dist, 2.)
+        self.assertEqual(dist, 0.35590260840104376)
 
 
 if __name__ == '__main__':

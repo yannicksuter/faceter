@@ -1,5 +1,5 @@
 import sys
-from VecMath import VecMath as vm
+import VecMath as vm
 from model import *
 from Plane import Plane
 
