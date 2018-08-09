@@ -8,8 +8,8 @@ from enum import Enum
 import itertools
 
 from model import *
-from Exporter import Exporter
-from VecMath import VecMath as vm
+import Exporter
+import VecMath as vm
 
 class BoundingBox:
     def __init__(self, vertices):
@@ -181,7 +181,9 @@ class Path:
                 # closepath
                 if vm.equal(cur_shape[-1], cur_shape[0]):
                     cur_shape = cur_shape[:-1]
-                self._shapes.append(Shape(cur_shape))
+                # it is possible that a shape can have twisted/shared vertices (like an 8)
+                for shape in self.__split_twisted_shape(cur_shape):
+                    self._shapes.append(Shape(shape))
                 token_idx += 1
             elif cur_token[0:1] == 'l' or cur_token[0:1] == 'L':
                 # lineto: relative/absolute mode
@@ -200,6 +202,21 @@ class Path:
                     cur_pos += v
                 cur_shape.append(cur_pos.copy())
                 token_idx += 1
+
+    def __split_twisted_shape(self, vertices):
+        shared_vertices = []
+        for idx_1, vertex_1 in enumerate(vertices):
+            for idx_2, vertex_2 in enumerate(vertices):
+                if idx_1 != idx_2 and vm.equal(vertex_1, vertex_2):
+                    shared_vertices.append((idx_1, idx_2))
+
+        if not shared_vertices:
+            return [vertices]
+
+        splits = []
+        for i1, i2 in shared_vertices:
+            splits.append(self.get_sublist_cycled(vertices, i1, i2))
+        return splits
 
     def __read_vec(self, token):
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
@@ -325,15 +342,15 @@ class Path:
 if __name__ == "__main__":
     # filename = '0123'
     # filename = 'yannick'
-    # filename = 'yannick2'
-    filename = 'test'
+    filename = 'yannick2'
+    # filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
     # paths = Path.read(f'./example/svg/yannick2.svg')
     # paths = Path.read(f'./example/svg/test.svg')
 
     combined_model = Model()
-    for path in paths:
+    for path in paths[:1]:
         print(f'triangulating path={path._id} shapes={len(path._shapes)}')
         path_models = path.triangulate()
         for m in path_models:
@@ -341,5 +358,4 @@ if __name__ == "__main__":
 
     combined_model.flip(axis_y=True)
 
-    Exporter.translate(combined_model, -combined_model._center)  # center object
-    Exporter.write_obj(combined_model, f'./export/_{filename}.obj')
+    Exporter.write(combined_model, f'./export/_{filename}.obj')

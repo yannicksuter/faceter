@@ -49,13 +49,10 @@ def write_material_library(model, path, filename):
     print(f'{mtl_filename} written.')
     return mtl_filename
 
-def write_obj(model, export_filepath, transform=None):
+def write_obj(model, export_filepath, transform=euclid.Matrix4.new_identity()):
     try:
         path, filename = os.path.split(export_filepath)
         mtl_filename = write_material_library(model, path, filename)
-
-        if transform == None:
-            transform = euclid.Matrix4.new_identity()
 
         with open(export_filepath, 'w') as obj_export:
             obj_export.write(f'# {filename}\n#\n')
@@ -68,13 +65,10 @@ def write_obj(model, export_filepath, transform=None):
     except:
         print(f'Export: {export_filepath} file could not be written.')
 
-def write_obj_split(model, export_filepath, transform=None):
+def write_obj_split(model, export_filepath, transform=euclid.Matrix4.new_identity()):
     try:
         path, filename = os.path.split(export_filepath)
         filename, ext = os.path.splitext(filename)
-
-        if transform == None:
-            transform = euclid.Matrix4.new_identity()
 
         for group in model._groups:
             filename_group = os.path.join(path, f'{filename}_{group._name}{ext}')
@@ -88,7 +82,7 @@ def write_obj_split(model, export_filepath, transform=None):
         print(f'Export: {export_filepath} file could not be written.')
 
 def write(model, filename, orientation_vec=None):
-    """Rotate and center object to lay flat ob the heat-bead"""
+    """Rotate and center object to lay flat on the heat-bead"""
     model._update()
 
     if orientation_vec is None:
