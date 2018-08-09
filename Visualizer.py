@@ -126,7 +126,7 @@ class Scene:
         self._batch.draw()
 
 class Window(pyglet.window.Window):
-    def __init__(self, width, height, caption, resizable=False):
+    def __init__(self, width, height, caption, resizable=False, retina=False):
         pyglet.window.Window.__init__(self, width=width, height=height, caption=caption, resizable=resizable)
 
         # sets the background color
@@ -141,6 +141,7 @@ class Window(pyglet.window.Window):
         glEnable(GL_DEPTH_TEST)
 
         self.wireframe = False
+        self._retina = retina
 
         # define scene
         self.scene = Scene(z=-30)
@@ -148,7 +149,10 @@ class Window(pyglet.window.Window):
         @self.event
         def on_resize(width, height):
             # sets the viewport
-            gl.glViewport(0, 0, width*2, height*2)
+            if self._retina:
+                gl.glViewport(0, 0, width*2, height*2)
+            else:
+                gl.glViewport(0, 0, width, height)
 
             # sets the projection
             gl.glMatrixMode(gl.GL_PROJECTION)
@@ -209,7 +213,7 @@ if __name__ == "__main__":
     obj_model._groups[0]._material._diffuse = [1., 0., 0.]
     obj_model.extrude(5., faces=obj_model._faces)
 
-    window = Window(width=1024, height=768, caption='Faceter (Preview)', resizable=False)
+    window = Window(width=1024, height=768, caption='Faceter (Preview)', resizable=False, retina=False)
     obj_model.triangulate()
     window.scene.add_model(obj_model)
     pyglet.app.run()

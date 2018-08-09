@@ -2,14 +2,10 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
-* refactor to use euclid library
 * add shape embedding
-* improving rev-triangulation algorithm to be also robust with polygon(P>4)
-** use ear clipping approach for 3d (P>4) polygon
+* improving rev-triangulation algorithm to be also robust with polygon(P>4) -> use ear clipping approach for 3d (P>4) polygon
 * generate interesting triangle fields, first attempt using delaunay
-* refactor visualizer to render model-class objects
-* add material support to OBJ export
-* add material support to OBJ import
+* refactor to use euclid library
 * get rid of Exporter.translate(...) as it's destroying the model -> use euclid/transform vertex befor exporting/writing instead
 
 ## Issues

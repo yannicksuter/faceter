@@ -26,7 +26,7 @@ class Model:
         cls._faces = []
         for mesh_idx, mesh in enumerate(obj_data._meshes.values()):
             for group_idx, group in enumerate(mesh._groups):
-                cls.set_group(f'{mesh._name}/{group._material._name}')
+                cls.set_group(f'{mesh._name}_{group._material._name}')
                 for face in group._faces:
                     vertex_ids = []
                     for f_id, t_id, n_id in face:

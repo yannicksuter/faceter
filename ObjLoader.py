@@ -1,4 +1,6 @@
 # obj/wavefront specs: http://paulbourke.net/dataformats/obj/
+# mtl/wavefront specs: http://paulbourke.net/dataformats/mtl/
+
 import os, logging
 import model
 
@@ -59,7 +61,7 @@ class ObjLoader(object):
                         material = self._materials.get(values[1], None)
                         if material is None:
                             logging.warning('Unknown material: %s' % values[1])
-                            material = model.Material("<unknown>")
+                            material = model.Material("unknown")
                         if mesh is not None:
                             group = MaterialGroup(material)
                             mesh._groups.append(group)
@@ -77,7 +79,7 @@ class ObjLoader(object):
                             mesh = Mesh('')
                             self.mesh_list.append(mesh)
                         if material is None:
-                            material = model.Material("<unknown>")
+                            material = model.Material("unknown")
                         if group is None:
                             group = MaterialGroup(material)
                             mesh._groups.append(group)
@@ -115,8 +117,6 @@ class ObjLoader(object):
                             material._ambient = map(float, values[1:])
                         elif values[0] == 'Ks':
                             material._specular = map(float, values[1:])
-                        elif values[0] == 'Ke':
-                            material._emissive = map(float, values[1:])
                         elif values[0] == 'Ns':
                             material._shininess = float(values[1])
                         elif values[0] == 'd':
