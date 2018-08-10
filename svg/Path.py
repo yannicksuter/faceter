@@ -182,7 +182,7 @@ class Path:
                 if vm.equal(cur_shape[-1], cur_shape[0]):
                     cur_shape = cur_shape[:-1]
                 # it is possible that a shape can have twisted/shared vertices (like an 8)
-                for shape in self.__split_twisted_shape(cur_shape):
+                for shape in self.split_twisted_shape(cur_shape):
                     self._shapes.append(Shape(shape))
                 token_idx += 1
             elif cur_token[0:1] == 'l' or cur_token[0:1] == 'L':
@@ -203,19 +203,34 @@ class Path:
                 cur_shape.append(cur_pos.copy())
                 token_idx += 1
 
-    def __split_twisted_shape(self, vertices):
-        shared_vertices = []
+    def split_twisted_shape(self, vertices):
+        """Walk multi split paths and return separated shapes"""
+        shared_vertices = {}
         for idx_1, vertex_1 in enumerate(vertices):
             for idx_2, vertex_2 in enumerate(vertices):
                 if idx_1 != idx_2 and vm.equal(vertex_1, vertex_2):
-                    shared_vertices.append((idx_1, idx_2))
+                    # shared_vertices.append((idx_1, idx_2))
+                    shared_vertices[idx_1] = idx_2
 
         if not shared_vertices:
             return [vertices]
 
         splits = []
-        for i1, i2 in shared_vertices:
-            splits.append(self.get_sublist_cycled(vertices, i1, i2))
+        id_queue = [x for x in range(len(vertices))]
+        while id_queue:
+            shape = []
+            cur_id = id_queue[0]
+            while id_queue:
+                id_queue.remove(cur_id)
+                shape.append(cur_id)
+                # if id is a bridge, change side...
+                if cur_id in shared_vertices:
+                    cur_id = shared_vertices[cur_id]
+                cur_id = (cur_id+1)%len(vertices)
+                # test if loop is closed -> define new shape
+                if cur_id == shape[0]:
+                    splits.append([vertices[i] for i in shape])
+                    break
         return splits
 
     def __read_vec(self, token):
@@ -341,8 +356,8 @@ class Path:
 
 if __name__ == "__main__":
     # filename = '0123'
-    # filename = 'yannick'
-    filename = 'yannick2'
+    filename = 'yannick'
+    # filename = 'yannick2'
     # filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
@@ -350,7 +365,7 @@ if __name__ == "__main__":
     # paths = Path.read(f'./example/svg/test.svg')
 
     combined_model = Model()
-    for path in paths[:1]:
+    for path in paths:
         print(f'triangulating path={path._id} shapes={len(path._shapes)}')
         path_models = path.triangulate()
         for m in path_models:
