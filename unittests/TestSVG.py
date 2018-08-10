@@ -38,5 +38,20 @@ class TestSVG(unittest.TestCase):
         res = path.split_twisted_shape(vertices)
         self.assertTrue(len(res)==3)
 
+        # still fails
+        # vertices=[np.array([0., 0., 0.]),
+        #           np.array([1., 1., 0.]),
+        #           np.array([0., 2., 0.]),
+        #           np.array([-1., 1., 0.]),
+        #           np.array([0., 0., 0.]),
+        #           np.array([1., 0., 0.]),
+        #           np.array([2., -1., 0.]),
+        #           np.array([0., 0., 0.]),
+        #           np.array([-1., 0., 0.]),
+        #           np.array([-2., -1., 0.]),
+        #           ]
+        # res = path.split_twisted_shape(vertices)
+        # self.assertTrue(len(res)==3)
+
 if __name__ == '__main__':
     unittest.main()

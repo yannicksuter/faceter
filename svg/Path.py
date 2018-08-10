@@ -205,28 +205,23 @@ class Path:
 
     def split_twisted_shape(self, vertices):
         """Walk multi split paths and return separated shapes"""
-        shared_vertices = {}
-        for idx_1, vertex_1 in enumerate(vertices):
-            for idx_2, vertex_2 in enumerate(vertices):
-                if idx_1 != idx_2 and vm.equal(vertex_1, vertex_2):
-                    # shared_vertices.append((idx_1, idx_2))
-                    shared_vertices[idx_1] = idx_2
-
-        if not shared_vertices:
-            return [vertices]
+        vcount = len(vertices)
+        shared_vertices = {i: i for i in range(vcount)}
+        for idx1, vertex1 in enumerate(vertices):
+            for idx2, vertex2 in enumerate(vertices):
+                if idx1 != idx2 and vm.equal(vertex1, vertex2):
+                    shared_vertices[idx1] = idx2
+                    break
 
         splits = []
-        id_queue = [x for x in range(len(vertices))]
+        id_queue = [x for x in range(vcount)]
         while id_queue:
             shape = []
             cur_id = id_queue[0]
             while id_queue:
                 id_queue.remove(cur_id)
                 shape.append(cur_id)
-                # if id is a bridge, change side...
-                if cur_id in shared_vertices:
-                    cur_id = shared_vertices[cur_id]
-                cur_id = (cur_id+1)%len(vertices)
+                cur_id = (shared_vertices[cur_id]+1)%vcount
                 # test if loop is closed -> define new shape
                 if cur_id == shape[0]:
                     splits.append([vertices[i] for i in shape])
@@ -356,8 +351,8 @@ class Path:
 
 if __name__ == "__main__":
     # filename = '0123'
-    filename = 'yannick'
-    # filename = 'yannick2'
+    # filename = 'yannick'
+    filename = 'yannick2'
     # filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
