@@ -349,6 +349,14 @@ class Path:
             print(f'Error while reading {filename}')
         return _paths
 
+    def _size(self):
+        """ Get size of bounding box """
+        return np.absolute(self._bbox[1] - self._bbox[0])
+
+    def _size(self):
+        """ Get size of bounding box """
+        return np.absolute(self._bbox[1] - self._bbox[0])
+
 if __name__ == "__main__":
     # filename = '0123'
     # filename = 'yannick'
