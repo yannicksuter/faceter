@@ -10,7 +10,7 @@ if __name__ == "__main__":
     filename = '0123'
     paths = svg.Path.read(f'./example/svg/{filename}.svg')
 
-    min, max = paths._size
+    min, max = paths._bbox
     shape = svg.Shape([np.array([min[0], min[1]]),
                    np.array([max[0], min[1]]),
                    np.array([max[0], max[1]]),
