@@ -12,14 +12,28 @@ import Exporter
 import VecMath as vm
 
 class BoundingBox:
-    def __init__(self, vertices):
-        self._min = vertices[0].copy()
-        self._max = vertices[0].copy()
+    def __init__(self):
+        self._min = np.array([0., 0.])
+        self._max = np.array([0., 0.])
+
+    @classmethod
+    def from_vertices(cls, vertices):
+        cls = BoundingBox()
+        cls._min = vertices[0].copy()
+        cls._max = vertices[0].copy()
         for vertex in vertices:
-            self._min[0] = min(self._min[0], vertex[0])
-            self._min[1] = min(self._min[1], vertex[1])
-            self._max[0] = max(self._max[0], vertex[0])
-            self._max[1] = max(self._max[1], vertex[1])
+            cls._min[0] = min(cls._min[0], vertex[0])
+            cls._min[1] = min(cls._min[1], vertex[1])
+            cls._max[0] = max(cls._max[0], vertex[0])
+            cls._max[1] = max(cls._max[1], vertex[1])
+        return cls
+
+    @classmethod
+    def from_other(cls, other):
+        cls = BoundingBox()
+        cls._min = other._min.copy()
+        cls._max = other._max.copy()
+        return cls
 
     def is_inside(self, other):
         """Check if bounding box is inside the other bounding box."""
@@ -27,6 +41,18 @@ class BoundingBox:
           if all(m_s >= m_o for m_s,m_o in zip(self._min, other._min)) and all(m_s <= m_o for m_s,m_o in zip(self._max, other._max)):
               return True
         return False
+
+    def expand(self, w, h):
+        self._min[0] -= w
+        self._min[1] -= h
+        self._max[0] += w
+        self._max[1] += h
+        return self
+
+    def combine(self, other):
+        if isinstance(other, BoundingBox):
+            self._min = np.minimum(self._min, other._min)
+            self._max = np.maximum(self._max, other._max)
 
     @property
     def _size(self):
@@ -56,7 +82,7 @@ class Shape:
         v_count = len(self._vertices)
         self._edges = [Segment2D(i, (i+1)%v_count, v, self._vertices[(i+1)%v_count]) for i,v in enumerate(self._vertices)]
         self._angles = [angle(self._vertices[(i+1)%len(self._vertices)]-v, self._vertices[(i-1)%len(self._vertices)]-v) for i, v in enumerate(self._vertices)]
-        self._bbox = BoundingBox(self._vertices)
+        self._bbox = BoundingBox.from_vertices(self._vertices)
         def shoelace(v1, v2):
             return (v2[0]-v1[0])*(v2[1]+v1[1])
         self._orientation = ShapeOrientation.ORIENTATION_CW if sum([shoelace(v,self._vertices[(i+1)%v_count] ) for i,v in enumerate(self._vertices)]) > 0. else ShapeOrientation.ORIENTATION_CCW
@@ -155,12 +181,17 @@ class Segment2D:
         return False
 
 class Path:
-    def __init__(self, description):
-        """Parse path element from a SVG<1.1 file. (https://www.w3.org/TR/SVG/paths.html#PathData)"""
+    def __init__(self):
         self._shapes = []
         self._id = None
+
+    @classmethod
+    def from_description(cls, description):
+        """Parse path element from a SVG<1.1 file. (https://www.w3.org/TR/SVG/paths.html#PathData)"""
+        cls = Path()
+
         if 'id' in description:
-            self._id = description['id']
+            cls._id = description['id']
 
         cur_pos = None
         token = description['d'].split(' ')
@@ -172,9 +203,9 @@ class Path:
                 # moveto: relative/absolute mode
                 absolute_mode = False if cur_token[0:1] == 'm' else True
                 if token_idx == 0 or absolute_mode:
-                    cur_pos = self.__read_vec(token[token_idx+1])
+                    cur_pos = cls.__read_vec(token[token_idx+1])
                 else:
-                    cur_pos += self.__read_vec(token[token_idx+1])
+                    cur_pos += cls.__read_vec(token[token_idx+1])
                 cur_shape = [cur_pos.copy()]
                 token_idx += 2
             elif cur_token[0:1] == 'z' or cur_token[0:1] == 'Z':
@@ -182,8 +213,8 @@ class Path:
                 if vm.equal(cur_shape[-1], cur_shape[0]):
                     cur_shape = cur_shape[:-1]
                 # it is possible that a shape can have twisted/shared vertices (like an 8)
-                for shape in self.split_twisted_shape(cur_shape):
-                    self._shapes.append(Shape(shape))
+                for shape in cls.split_twisted_shape(cur_shape):
+                    cls._shapes.append(Shape(shape))
                 token_idx += 1
             elif cur_token[0:1] == 'l' or cur_token[0:1] == 'L':
                 # lineto: relative/absolute mode
@@ -195,13 +226,20 @@ class Path:
                 # vertical lineto: relative/absolute mode
                 token_idx += 1
             else:
-                v = self.__read_vec(token[token_idx])
+                v = cls.__read_vec(token[token_idx])
                 if absolute_mode:
                     cur_pos = v
                 else:
                     cur_pos += v
                 cur_shape.append(cur_pos.copy())
                 token_idx += 1
+        return cls
+
+    @classmethod
+    def from_shape(cls, shape):
+        cls = Path()
+        cls._shapes.append(shape)
+        return cls
 
     def split_twisted_shape(self, vertices):
         """Walk multi split paths and return separated shapes"""
@@ -301,7 +339,7 @@ class Path:
             vertices = list(outer._vertices)
             for shape, shared_vertices in inner:
                 #inner shape must be clockwise oriented
-                if shape._orientation !=  ShapeOrientation.ORIENTATION_CW:
+                if shape._orientation != ShapeOrientation.ORIENTATION_CW:
                     shape.reverse()
 
                 if shared_vertices:
@@ -341,24 +379,30 @@ class Path:
                 #read path elements
                 if elem.tag.endswith('path'):
                     try:
-                        _paths.append(Path(elem.attrib))
-                    except:
-                        pass
+                        _paths.append(Path.from_description(elem.attrib))
+                    except Exception as e:
+                        print(f'Error loading shape: {e}')
             print(f'{len(_paths)} elements read from {filename}')
         except:
             print(f'Error while reading {filename}')
         return _paths
 
+    @property
     def _bbox(self):
         """ Get bounding box """
+        bb = BoundingBox.from_other(self._shapes[0]._bbox)
         for shape in self._shapes:
-            bbox = shape._bbox
-        return np.absolute(self._bbox[1] - self._bbox[0])
+            bb.combine(shape._bbox)
+        return bb
 
     def _size(self):
         """ Get size of bounding box """
         bbox = self._bbox
         return np.absolute(bbox[1] - bbox[0])
+
+    def embed(self, other, tag=None):
+        if isinstance(other, list):
+            return self.triangulate()[0][0]
 
 if __name__ == "__main__":
     # filename = '0123'
