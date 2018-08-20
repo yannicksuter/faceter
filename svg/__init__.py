@@ -1,2 +1,3 @@
 from svg.Path import Path
-from svg.Path import Shape
+from svg.Shape import Shape
+from svg.BoundingBox import BoundingBox
