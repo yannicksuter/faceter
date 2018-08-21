@@ -46,14 +46,17 @@ class Model:
     def add_group(self, name):
         """Add and return new group or will return existing group"""
         name = name.replace(' ', '_')
-        group = None
-        for g in self._groups:
-            if name == g._name:
-                group = g
+        group = self.get_group(name)
         if group is None:
             group = Group(self, name)
             self._groups.append(group)
         return group
+
+    def get_group(self, name):
+        for group in self._groups:
+            if name == group._name:
+                return group
+        return None
 
     def set_group(self, name):
         """Set active group by name."""

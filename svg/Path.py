@@ -231,25 +231,19 @@ class Path:
         bbox = self._bbox
         return np.absolute(bbox[1] - bbox[0])
 
-    def embed(self, other, tag=None):
-        """ Embeds a triangulated construct defined by other (list of tuples, result from path triangulation).
-            Process:
-            #1) add outer shapes as inner
-            #2) triangulate results
-            #3) add inner shapes as triangulated objects by themself
-            #4) merge all together
-        """
+    def embed(self, other, group_name=None):
+        """ Embeds a triangulated construct defined by other (list of tuples, result from path triangulation). """
         if isinstance(other, list):
             consolidated_model = Model()
             for path in other:
                 for model, outer, inner_list in path:
                     # 1) add triangulated path itself
-                    consolidated_model.merge(model)
+                    consolidated_model.merge(model, group_name=group_name)
+                    # 2) add outer shapes as inner (reserve!)
+                    self._shapes.append(outer.clone().reverse())
+                    # 3) add inner shapes as triangulated objects by themself
                     for inner_shape in inner_list:
-                        # 2) add outer shapes as inner
-                        self._shapes.append(outer.clone().reverse())
-                        # 3) add inner shapes as triangulated objects by themself
-                        consolidated_model.merge(inner_shape[0].clone().reverse().triangulate())
+                        consolidated_model.merge(inner_shape[0].clone().reverse().triangulate(), group_name=group_name)
             # 4) triangulate outer shape
             path_models = self.triangulate()
             for m in path_models:

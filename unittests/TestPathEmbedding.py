@@ -23,9 +23,10 @@ if __name__ == "__main__":
                    np.array([bbox._min[0], bbox._max[1]]),
                   ]))
 
-    embedded_model = target_path.embed([path.triangulate() for path in paths], tag='svg')
+    embedded_model = target_path.embed([path.triangulate() for path in paths], group_name='svg')
     embedded_model.flip(axis_y=True)
 
-    embedded_model.extrude(5., faces=embedded_model.get_faces_by_tag('svg'))
+    embedded_model.get_group('svg')._material._diffuse = [1., 0., 0.]
+    embedded_model.extrude(5., faces=embedded_model.get_group('svg')._faces)
 
     Exporter.write(embedded_model, f'./export/embedded_{filename}.obj')
