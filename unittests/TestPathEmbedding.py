@@ -12,7 +12,8 @@ def calc_pathes_bbox(paths):
     return bbox
 
 if __name__ == "__main__":
-    filename = '0123'
+    # filename = '0123'
+    filename = 'test'
     paths = svg.Path.read(f'./example/svg/{filename}.svg')
 
     bbox = calc_pathes_bbox(paths).expand(10, 10)

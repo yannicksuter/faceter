@@ -232,14 +232,37 @@ class Path:
         return np.absolute(bbox[1] - bbox[0])
 
     def embed(self, other, tag=None):
+        """ Embeds a triangulated construct defined by other (list of tuples, result from path triangulation).
+            Process:
+            #1) add outer shapes as inner
+            #2) triangulate results
+            #3) add inner shapes as triangulated objects by themself
+            #4) merge all together
+        """
         if isinstance(other, list):
-            return self.triangulate()[0][0]
+            consolidated_model = Model()
+            for path in other:
+                for model, outer, inner_list in path:
+                    # 1) add triangulated path itself
+                    consolidated_model.merge(model)
+                    for inner_shape in inner_list:
+                        # 2) add outer shapes as inner
+                        self._shapes.append(outer.clone().reverse())
+                        # 3) add inner shapes as triangulated objects by themself
+                        consolidated_model.merge(inner_shape[0].clone().reverse().triangulate())
+            # 4) triangulate outer shape
+            path_models = self.triangulate()
+            for m in path_models:
+                consolidated_model.merge(m[0])
+            return consolidated_model
+
+        return False
 
 if __name__ == "__main__":
-    filename = '0123'
+    # filename = '0123'
     # filename = 'yannick'
     # filename = 'yannick2'
-    # filename = 'test'
+    filename = 'test'
     paths = Path.read(f'./example/svg/{filename}.svg')
     # paths = Path.read(f'./example/svg/yannick.svg')
     # paths = Path.read(f'./example/svg/yannick2.svg')

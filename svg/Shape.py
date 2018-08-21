@@ -26,6 +26,10 @@ class Shape:
     def reverse(self):
         self._vertices = list(reversed(self._vertices))
         self.__update()
+        return self
+
+    def clone(self):
+        return Shape(self._vertices)
 
     def __update(self):
         v_count = len(self._vertices)
