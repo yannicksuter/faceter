@@ -27,6 +27,6 @@ if __name__ == "__main__":
     embedded_model.flip(axis_y=True)
 
     embedded_model.get_group('svg')._material._diffuse = [1., 0., 0.]
-    embedded_model.extrude(5., faces=embedded_model.get_group('svg')._faces)
+    embedded_model.extrude(-5., faces=embedded_model.get_group('svg')._faces)
 
     Exporter.write(embedded_model, f'./export/embedded_{filename}.obj')

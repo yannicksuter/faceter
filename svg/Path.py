@@ -243,11 +243,11 @@ class Path:
                     self._shapes.append(outer.clone().reverse())
                     # 3) add inner shapes as triangulated objects by themself
                     for inner_shape in inner_list:
-                        consolidated_model.merge(inner_shape[0].clone().reverse().triangulate(), group_name=group_name)
+                        consolidated_model.merge(inner_shape[0].clone().reverse().triangulate(), group_name='shape')
             # 4) triangulate outer shape
             path_models = self.triangulate()
             for m in path_models:
-                consolidated_model.merge(m[0])
+                consolidated_model.merge(m[0], group_name='shape')
             return consolidated_model
 
         return False
