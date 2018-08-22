@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import VecMath
+import itertools
 from model import *
 
 class Face:
@@ -10,7 +11,6 @@ class Face:
         self._tags = list(tags)
         self._vertex_ids = vertex_ids
         self._edges = []
-        self._neighbour_faces = []
         self.__update()
 
     def __update(self):
@@ -18,7 +18,7 @@ class Face:
         for i in range(len(self._vertex_ids)):
             v0_id = self._vertex_ids[i]
             v1_id = self._vertex_ids[(i + 1) % len(self._vertex_ids)]
-            self._edges.append(Edge(v0_id, v1_id, np.linalg.norm(self._model._vertices[v1_id]-self._model._vertices[v0_id])))
+            self._edges.append(Edge(self, v0_id, v1_id, np.linalg.norm(self._model._vertices[v1_id]-self._model._vertices[v0_id])))
 
         # face normal vector
         self.calculate_norm(self._model._vertices)
@@ -70,28 +70,26 @@ class Face:
                 return False
         return True
 
+    @property
+    def _neighbour_faces(self):
+        return list(itertools.chain.from_iterable([edge._neighbour_faces for edge in self._edges]))
+
     def is_neighbour(self, face):
         """ Returns True if face is neighbouring the current face """
-        for edge in self._edges:
-            for edge_ in face._edges:
-                if edge.is_equal(edge_):
-                    if face not in self._neighbour_faces:
-                        return True
-        return False
+        return face in self._neighbour_faces
 
-    def get_triangle_area(self, a, b, c):
+    @property
+    def _area(self):
         """
         Uses the heron formula to calculate the area
         of the triangle where `a`,`b` and `c` are the side lengths.
         """
-        s = (a + b + c) / 2
-        return math.sqrt(s * (s - a) * (s - b) * (s - c))
-
-    def get_area(self):
         if len(self._vertex_ids) > 3:
             # todo: needs to be triangulated first, then sum(get_triangle_area(triangle) for triangles)
             raise NotImplementedError
-        return self.get_triangle_area(self._edges[0].length, self._edges[1].length, self._edges[2].length)
+
+        s = (self._edges[0].length + self._edges[1].length + self._edges[2].length) / 2
+        return math.sqrt(s * (s - self._edges[0].length) * (s - self._edges[1].length) * (s - self._edges[2].length))
 
     def merge_face_vids(self, face):
         v_ids = None

@@ -98,10 +98,13 @@ class Model:
 
     def calculate_neighbours(self):
         for face in self._faces:
-            face._neighbour_faces = []
-            for face_ in self._faces:
-                if face is not face_ and face.is_neighbour(face_):
-                    face._neighbour_faces.append(face_)
+            for edge in face._edges:
+                edge.calculate_neighbours([f for f in self._faces if face != f])
+            #
+            # face._neighbour_faces = []
+            # for face_ in self._faces:
+            #     if face is not face_ and face.is_neighbour(face_):
+            #         face._neighbour_faces.append(face_)
 
     def calculate_boundingbox(self):
         if len(self._vertices) > 0:
@@ -225,7 +228,7 @@ class Model:
     ## Extrude
     ####
 
-    def extrude_face(self, face, dir, length, group=None):
+    def _extrude_face(self, face, dir, length, group=None):
         """Extrudes a single face, given a direction and a extrusion length"""
         vertices = [v+dir*length for v in face._vertices]
         #add new top face
@@ -240,8 +243,28 @@ class Model:
         #remove old face
         self.remove_face(face)
 
+    def extrude_face(self, face, dir, length, edges, assign_group=None):
+        """Extrudes a single face, given a direction and a extrusion length"""
+        offset = dir*length
+        #add new top face
+        self.add_face([v+offset for v in face._vertices], tags=face._tags, group=face._group)
+
+        #add side faces/quads
+        self._cur_group = assign_group
+        for e in edges:
+            self.add_face([self._vertices[e.v0_id], self._vertices[e.v1_id], self._vertices[e.v1_id]+offset, self._vertices[e.v0_id]+offset])
+
+        self.remove_face(face)
+
     def extrude(self, length, faces=None, group=None):
         """Convenience method to extrude multiple faces/groups with a single call."""
         if faces:
             for face in faces.copy():
-                self.extrude_face(face, face._norm, length, group=group)
+                edges = [edge for edge in face._edges if is_border_edge(edge, faces)]
+                self.extrude_face(face, face._norm, length, edges, assign_group=group)
+
+def is_border_edge(edge, faces):
+    for face in faces:
+        if face != edge._face and face in edge._neighbour_faces:
+            return False
+    return True

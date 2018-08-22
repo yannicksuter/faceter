@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     for face_id, face in enumerate(obj_model._faces):
         print(f'processing facet #{face_id}')
-        face_surface = face.get_area()
+        face_surface = face._area
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
         facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
         faceted_model.merge(facet, group_name=f'facet_{face_id}')

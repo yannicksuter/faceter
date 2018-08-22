@@ -70,7 +70,7 @@ if __name__ == "__main__":
         print(f'processing facet #{face_id}')
 
         # calculate scale factor to get a constant lid size
-        face_surface = ref_face.get_area()
+        face_surface = ref_face._area
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
 
         facet = Facet(ref_face, obj_model, brick_height=10., top_height=15., top_size=ttop_size)
