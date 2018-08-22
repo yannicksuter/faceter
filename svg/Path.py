@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import xml.etree.ElementTree as ET
+import sys
 import numpy as np
 import VecMath as vm
 
@@ -161,6 +162,19 @@ class Path:
 
         return groups
 
+    def __find_min_vert_dist(self, outer_list, inner_list):
+        """ Find the vertice pair with smallest distance """
+        min_dist = sys.float_info.max
+        out_idx, in_idx = None, None
+        for v_out_idx, v_out in enumerate(outer_list):
+            for v_in_idx, v_in in enumerate(inner_list):
+                dist = vm.dist_point_to_point(v_out, v_in)
+                if dist < min_dist:
+                    min_dist = dist
+                    out_idx = v_out_idx
+                    in_idx = v_in_idx
+        return out_idx, in_idx
+
     def triangulate(self):
         res = []
         for outer, inner in self.split_shapes().items():
@@ -179,11 +193,7 @@ class Path:
                     #if there one shared vertice, use it as a bridge
                     inner_idx, outer_idx = shared_vertices[0]
                 else:
-                    #find max-x vertice in inner_shape
-                    inner_idx = int(np.array(shape._vertices).argmax(axis=0)[0])
-                    inner_v = shape._vertices[inner_idx]
-                    #find the closest outer-vertice on the right side
-                    outer_idx = min([(vm.len(inner_v-v), idx) for idx, v in enumerate(vertices) if v[0] >= inner_v[0]], key=lambda x:x[0])[1]
+                    outer_idx, inner_idx = self.__find_min_vert_dist(vertices, shape._vertices)
 
                 #insert inner shape and bridges
                 for i in range(len(shape._vertices)):
