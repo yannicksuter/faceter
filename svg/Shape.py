@@ -66,7 +66,8 @@ class Shape:
         """Triangulate shape using ear clipping algorithm."""
         model = Model()
         v_list = [np.array([v[0], v[1], 0.]) for v in self._vertices]
-        while len(v_list) > 3:
+        v_list_len = len(v_list)
+        while v_list_len > 3:
             for i,v in enumerate(v_list):
                 # print(f'processing {i}, {v}')
                 v0 = v_list[(i-1)%len(v_list)]
@@ -79,6 +80,10 @@ class Shape:
                         model.add_face([v0, v, v1])
                         v_list.pop(i)
                         break
+            if v_list_len == len(v_list):
+                raise RuntimeError('Ear clipping failed to find vertice tripple to triangulate')
+            v_list_len = len(v_list)
+
         model.add_face(v_list)
         model._update()
         return model
