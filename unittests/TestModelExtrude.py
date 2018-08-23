@@ -11,6 +11,7 @@ if __name__ == "__main__":
     obj_model.simplify()
 
     obj_model._groups[0]._material._diffuse = [1., 0., 0.]
-    obj_model.extrude(5., faces=obj_model._faces)
+    for face in obj_model._faces.copy():
+        obj_model.extrude(5., faces=[face])
 
     Exporter.write(obj_model, f'../export/_{filename}_extruded.obj')

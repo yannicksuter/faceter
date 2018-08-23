@@ -8,7 +8,6 @@ Script to explode a 3d (obj) file into printable pieces.
 * clean up tag/group mess in model-class
 
 ## Issues
-* bug: cube extruder example, missing side quads
 * BUG/model: faces added with area 0, this can happen with svg triangulation where vertices span a horizontal line.
 
 ## Requirements
