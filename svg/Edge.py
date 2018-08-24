@@ -1,4 +1,5 @@
-class Edge:
+class Ed
+    ge:
     def __init__(self, idx0, idx1, v0, v1):
         self._idx0 = idx0
         self._v0= v0

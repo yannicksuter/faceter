@@ -28,13 +28,13 @@ def generate_facet(dest_model, source_model, face, brick_height, top_height, top
         side_verts.append(verts[(i + 1) % cnt])
         side_verts.append(verts_inner[(i + 1) % cnt])
         side_verts.append(verts_inner[i])
-        dest_model.add_face(side_verts)
+        dest_model.add_face(side_verts, tags=['facet_bottom_layer'])
         top_side_verts = []
         top_side_verts.append(verts_inner[i])
         top_side_verts.append(verts_inner[(i + 1) % cnt])
         top_side_verts.append(verts_top[(i + 1) % cnt])
         top_side_verts.append(verts_top[i])
-        dest_model.add_face(top_side_verts)
+        dest_model.add_face(top_side_verts, tags=['facet_top_layer'])
 
 class Facet(Model):
     def __init__(self, face, model, brick_height, top_height, top_size):

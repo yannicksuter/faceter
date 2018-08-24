@@ -1,11 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import ObjLoader, math
-import Exporter
+import math
+import ObjLoader, Exporter
 from Shell import *
 from model import *
 from Facet import Facet
+import svg
+import VecMath
+import MtxMath
+from euclid import euclid
+import numpy as np
+
+def embed_label(mode, face, label, glyph):
+    transform = MtxMath.conv_to_euclid(VecMath.rotate_fromto_matrix(face._norm, np.array([0., 0., 1.])))
+
+    vertices = [transform * euclid.Point3(v[0], v[1], v[2]) for v in face._vertices]
+    target_path = svg.Path.from_shape(svg.Shape([np.array([v[0], v[1]]) for v in vertices]))
+
+    # transform_ = transform.inverse()
+    # for v in face._vertices:
+    #     print('v %.4f %.4f %.4f\n' % tuple(v[:3]))
+    #     vertex = transform * euclid.Point3(v[0], v[1], v[2])
+    #     print('v %.4f %.4f %.4f\n' % tuple(vertex[:3]))
+    #     vertex = transform_ * euclid.Point3(vertex[0], vertex[1], vertex[2])
+    #     print('v %.4f %.4f %.4f\n' % tuple(vertex[:3]))
 
 if __name__ == "__main__":
     obj_name = 'abstract'
@@ -31,8 +50,10 @@ if __name__ == "__main__":
     faceted_model.triangulate()
 
     shell_model = Model()
+    paths_0123 = Path.read(f'./example/svg/0123.svg')
 
     for idx, group in enumerate(faceted_model._groups):
+        # create shell
         model = faceted_model.get_group_model(group)
         thickness = [2.] * len(model._faces)
         visibility = [True] * len(model._faces)
@@ -41,6 +62,14 @@ if __name__ == "__main__":
         for face in model.get_faces_by_tag('top'):
             visibility[face._id] = False  # top face is removed
         generate_shell(model, thickness, visibility)
+
+        #add label
+        lbl_face = max([(face, face._area) for face in model.get_faces_by_tag('facet_top_layer')], key=lambda item: item[1])[0]
+        lbl_group = model.add_group('label')
+        lbl_group._material._diffuse = [1., 0., 0.]
+        lbl_face._group = lbl_group
+        embed_label(model, lbl_face, f'{idx}', paths_0123)
+
         shell_model.merge(model, group_name=group._name)
         Exporter.write(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 

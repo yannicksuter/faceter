@@ -2,6 +2,7 @@ import sys
 import VecMath as vm
 from model import *
 from Plane import Plane
+import Exporter
 
 def get_first_plane(vertex, faces):
     """ First plane: Find the plane which center is closest to the vertex """
@@ -107,5 +108,4 @@ if __name__ == "__main__":
 
     generate_shell(obj_model, thickness, visibility)
 
-    from Exporter import Exporter
-    Exporter.write_obj(obj_model, f'./export/_{obj_name}_shell.obj')
+    Exporter.write(obj_model, f'./export/_{obj_name}_shell.obj')

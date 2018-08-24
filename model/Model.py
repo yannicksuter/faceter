@@ -220,7 +220,7 @@ class Model:
                     if rev_triangulation[face_idx]:
                         offset = 1
                     vertex_ids = [face._vertex_ids[0+offset], face._vertex_ids[(i+1+offset) % vert_count], face._vertex_ids[(i+2+offset) % vert_count]]
-                    self.add_face([self._vertices[id] for id in vertex_ids], group=face._group)
+                    self.add_face([self._vertices[id] for id in vertex_ids], group=face._group, tags=face._tags)
         self._update()
         print(f'Triangulation: Face count {face_count_before} before -> {len(self._faces)} after')
 
