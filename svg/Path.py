@@ -262,6 +262,10 @@ class Path:
 
         return False
 
+    @staticmethod
+    def combine(paths):
+        return [p[0] for p in paths]
+
 if __name__ == "__main__":
     # filename = '0123'
     # filename = 'yannick'

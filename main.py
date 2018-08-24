@@ -12,19 +12,18 @@ import MtxMath
 from euclid import euclid
 import numpy as np
 
-def embed_label(mode, face, label, glyph):
+def embed_label(model, face, label, glyph):
     transform = MtxMath.conv_to_euclid(VecMath.rotate_fromto_matrix(face._norm, np.array([0., 0., 1.])))
-
     vertices = [transform * euclid.Point3(v[0], v[1], v[2]) for v in face._vertices]
     target_path = svg.Path.from_shape(svg.Shape([np.array([v[0], v[1]]) for v in vertices]))
 
-    # transform_ = transform.inverse()
-    # for v in face._vertices:
-    #     print('v %.4f %.4f %.4f\n' % tuple(v[:3]))
-    #     vertex = transform * euclid.Point3(v[0], v[1], v[2])
-    #     print('v %.4f %.4f %.4f\n' % tuple(vertex[:3]))
-    #     vertex = transform_ * euclid.Point3(vertex[0], vertex[1], vertex[2])
-    #     print('v %.4f %.4f %.4f\n' % tuple(vertex[:3]))
+    label_path = glyph.combine([(glyph[int(c)], (0., 0.)) for c in label])
+
+    embedded_model = target_path.embed([path.triangulate() for path in label_path], group_name='svg')
+    embedded_model.transform(transform.inverse())
+
+    model.remove_face(face)
+    model.merge(embedded_model)
 
 if __name__ == "__main__":
     obj_name = 'abstract'
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     faceted_model.triangulate()
 
     shell_model = Model()
-    paths_0123 = Path.read(f'./example/svg/0123.svg')
+    paths_0123 = svg.Path.read(f'./example/svg/0123.svg')
 
     for idx, group in enumerate(faceted_model._groups):
         # create shell
