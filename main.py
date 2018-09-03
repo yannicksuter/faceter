@@ -22,6 +22,7 @@ def embed_label(model, face, label, glyph):
     label_path = svg.Path.combine([(glyph[int(c)], np.array([1., 0.])) for c in label])
 
     # move/scale label to fit into target triangle
+
     raise NotImplementedError
 
     # embed the label

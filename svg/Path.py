@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import sys
 import numpy as np
 import VecMath as vm
+from euclid import euclid
 
 from svg.Shape import *
 from svg.BoundingBox import BoundingBox
@@ -85,13 +86,16 @@ class Path:
         return cls
 
     def move(self, v):
+        mtx = euclid.Matrix3().translate(v[0], v[1])
         for shape in self._shapes:
-            shape.move(v)
+            shape.transform(mtx)
         return self
 
-    def rotate(self, r):
+    def rotate(self, angle, anchor=(0., 0.)):
+        mtx = euclid.Matrix3().translate(anchor[0], anchor[1]).rotate(angle).translate(-anchor[0], -anchor[1])
+        for shape in self._shapes:
+            shape.transform(mtx)
         return self
-
 
     def split_twisted_shape(self, vertices):
         """Walk multi split paths and return separated shapes"""
@@ -287,9 +291,10 @@ class Path:
         res = Path()
         pos = np.array([0., 0.])
         for p in paths:
-            bbox = p[0]._bbox
-            res.merge(p[0].clone().move(pos - bbox._min))
-            pos += (p[1] + np.array([bbox._size[0], 0.]))
+            path = p[0].clone().move(pos - p[0]._bbox._min)
+            # path = path.rotate(math.pi/4, anchor=(path._bbox._min[0], path._bbox._min[1]))
+            res.merge(path)
+            pos += (p[1] + np.array([path._bbox._size[0], 0.]))
         return res
 
 if __name__ == "__main__":

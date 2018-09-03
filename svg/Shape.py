@@ -5,6 +5,7 @@ import itertools
 
 from model import *
 import VecMath as vm
+from euclid import euclid
 
 from svg.BoundingBox import BoundingBox
 
@@ -23,10 +24,6 @@ class Shape:
         self._vertices = vertices.copy()
         self.__update()
 
-    def move(self, v):
-        for i, vertex in enumerate(self._vertices):
-            self._vertices[i] = vertex+v
-
     def reverse(self):
         self._vertices = list(reversed(self._vertices))
         self.__update()
@@ -34,6 +31,12 @@ class Shape:
 
     def clone(self):
         return Shape(self._vertices)
+
+    def transform(self, mtx):
+        for i, v in enumerate(self._vertices):
+            vt = mtx * euclid.Point2(v[0], v[1])
+            self._vertices[i] = np.array([vt[0], vt[1]])
+        self.__update()
 
     def __update(self):
         v_count = len(self._vertices)
