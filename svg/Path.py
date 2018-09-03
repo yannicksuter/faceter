@@ -85,14 +85,28 @@ class Path:
             cls._shapes.append(shape.clone())
         return cls
 
-    def move(self, v):
+    def translate(self, v, apply=True):
+        """Translate path by vector v"""
         mtx = euclid.Matrix3().translate(v[0], v[1])
-        for shape in self._shapes:
-            shape.transform(mtx)
-        return self
+        if apply:
+            return self.__transform(mtx)
+        return mtx
 
-    def rotate(self, angle, anchor=(0., 0.)):
+    def rotate(self, angle, anchor=(0., 0.), apply=True):
+        """Rotate path by angle (in radian) around anchor."""
         mtx = euclid.Matrix3().translate(anchor[0], anchor[1]).rotate(angle).translate(-anchor[0], -anchor[1])
+        if apply:
+            return self.__transform(mtx)
+        return mtx
+
+    def scale(self, scale_x=1., scale_y=1., apply=True):
+        """Scale path by factor x and y"""
+        mtx = euclid.Matrix3().scale(scale_x, scale_y)
+        if apply:
+            return self.__transform(mtx)
+        return mtx
+
+    def __transform(self, mtx):
         for shape in self._shapes:
             shape.transform(mtx)
         return self
@@ -291,7 +305,8 @@ class Path:
         res = Path()
         pos = np.array([0., 0.])
         for p in paths:
-            path = p[0].clone().move(pos - p[0]._bbox._min)
+            path = p[0].clone().translate(pos - p[0]._bbox._min)
+            path.scale(1., 2.)
             # path = path.rotate(math.pi/4, anchor=(path._bbox._min[0], path._bbox._min[1]))
             res.merge(path)
             pos += (p[1] + np.array([path._bbox._size[0], 0.]))

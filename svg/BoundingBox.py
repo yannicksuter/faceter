@@ -47,3 +47,8 @@ class BoundingBox:
     def _size(self):
         """Get size of bounding box."""
         return np.absolute(self._max - self._min)
+
+    @property
+    def _center(self):
+        """ Get center of bounding box """
+        return self._min + self._size * 0.5

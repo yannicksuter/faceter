@@ -126,7 +126,7 @@ class Model:
 
     @property
     def _center(self):
-        """ Get size of bounding box """
+        """ Get center of bounding box """
         return self._bbox[0] + self._size * 0.5
 
     def get_faces_with_vertex_id(self, vertex_id, in_group=None):
