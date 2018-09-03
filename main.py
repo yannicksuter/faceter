@@ -17,7 +17,10 @@ def embed_label(model, face, label, glyph):
     vertices = [transform * euclid.Point3(v[0], v[1], v[2]) for v in face._vertices]
     target_path = svg.Path.from_shape(svg.Shape([np.array([v[0], v[1]]) for v in vertices]))
 
-    label_path = glyph.combine([(glyph[int(c)], (0., 0.)) for c in label])
+    label_path = glyph.combine([(glyph[int(c)], np.array([1., 0.])) for c in label])
+
+    # move/scale label to fit into target triangle
+    
 
     embedded_model = target_path.embed([path.triangulate() for path in label_path], group_name='svg')
     embedded_model.transform(transform.inverse())

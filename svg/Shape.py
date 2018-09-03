@@ -23,6 +23,10 @@ class Shape:
         self._vertices = vertices.copy()
         self.__update()
 
+    def move(self, v):
+        for i, vertex in enumerate(self._vertices):
+            self._vertices[i] = vertex+v
+
     def reverse(self):
         self._vertices = list(reversed(self._vertices))
         self.__update()

@@ -73,6 +73,26 @@ class Path:
         cls._shapes.append(shape)
         return cls
 
+    def merge(self, path):
+        for s in path._shapes:
+            self._shapes.append(s)
+
+    def clone(self):
+        cls = Path()
+        cls._id = self._id
+        for shape in self._shapes:
+            cls._shapes.append(shape.clone())
+        return cls
+
+    def move(self, v):
+        for shape in self._shapes:
+            shape.move(v)
+        return self
+
+    def rotate(self, r):
+        return self
+
+
     def split_twisted_shape(self, vertices):
         """Walk multi split paths and return separated shapes"""
         vcount = len(vertices)
@@ -264,7 +284,13 @@ class Path:
 
     @staticmethod
     def combine(paths):
-        return [p[0] for p in paths]
+        res = Path()
+        pos = np.array([0., 0.])
+        for p in paths:
+            bbox = p[0]._bbox
+            res.merge(p[0].clone().move(pos - bbox._min))
+            pos += (p[1] + np.array([bbox._size[0], 0.]))
+        return res
 
 if __name__ == "__main__":
     # filename = '0123'
