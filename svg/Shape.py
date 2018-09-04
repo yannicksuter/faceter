@@ -24,6 +24,18 @@ class Shape:
         self._vertices = vertices.copy()
         self.__update()
 
+    def flip(self, center, flip_x, flip_y):
+        if flip_y:
+            for vertex in self._vertices:
+                vertex[1] = center[1] - (vertex[1] - center[1])
+            self.reverse()
+        if flip_x:
+            for vertex in self._vertices:
+                vertex[0] = center[0] - (vertex[0] - center[0])
+            self.reverse()
+        if flip_x or flip_y:
+            self.__update()
+
     def reverse(self):
         self._vertices = list(reversed(self._vertices))
         self.__update()

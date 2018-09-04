@@ -106,6 +106,12 @@ class Path:
             return self.__transform(mtx)
         return mtx
 
+    def flip(self, flip_x, flip_y):
+        center = self._bbox._center.copy()
+        for shape in self._shapes:
+            shape.flip(center, flip_x, flip_y)
+        return self
+
     def __transform(self, mtx):
         for shape in self._shapes:
             shape.transform(mtx)
@@ -213,7 +219,7 @@ class Path:
                     in_idx = v_in_idx
         return out_idx, in_idx
 
-    def triangulate(self):
+    def triangulate(self, merge_to_model=None):
         res = []
         for outer, inner in self.split_shapes().items():
             # inner shape must be counter clockwise oriented
@@ -242,10 +248,16 @@ class Path:
                     vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
 
             res.append((Shape(vertices).triangulate(), outer, inner))
+
+        # optional: merge results into target model
+        if merge_to_model != None:
+            for entry in res:
+                merge_to_model.merge(entry[0])
+
         return res
 
     @staticmethod
-    def read(filename):
+    def read(filename, flip_x=False, flip_y=False):
         _paths = []
         try:
             tree = ET.parse(filename)
@@ -258,7 +270,7 @@ class Path:
                 #read path elements
                 if elem.tag.endswith('path'):
                     try:
-                        _paths.append(Path.from_description(elem.attrib))
+                        _paths.append(Path.from_description(elem.attrib).flip(flip_x, flip_y))
                     except Exception as e:
                         print(f'Error loading shape: {e}')
             print(f'{len(_paths)} elements read from {filename}')
