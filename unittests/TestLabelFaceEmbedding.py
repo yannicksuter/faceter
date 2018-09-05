@@ -8,11 +8,8 @@ import numpy as np
 import svg
 import Exporter
 
-def calc_pathes_bbox(paths):
-    bbox = paths[0]._bbox
-    for path in paths:
-        bbox.combine(path._bbox)
-    return bbox
+def largest_rect_in_triangle():
+    pass
 
 if __name__ == "__main__":
     label = '726'
