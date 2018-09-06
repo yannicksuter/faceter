@@ -5,6 +5,9 @@ class BoundingBox:
         self._min = np.array([0., 0.])
         self._max = np.array([0., 0.])
 
+    def __repr__(self):
+        return 'BoundingBox(<%.2f, %.2f> to <%.2f, %.2f>)' % (self._min[0], self._min[1], self._max[0], self._max[1])
+
     @classmethod
     def from_vertices(cls, vertices):
         cls = BoundingBox()
