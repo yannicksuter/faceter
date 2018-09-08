@@ -17,9 +17,6 @@ def angle(v1, v2):
 
 def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
     """ http://mathcountsnotes.blogspot.com/2013/05/the-largest-rectangle-inscribed-in-any.html """
-    position = euclid.Point2(0., 0.)
-    scaling = euclid.Point2(1., 1.)
-    rotation = 0
 
     side = euclid.Line2(euclid.Point2(tri_vertice[side_idx%3].x, tri_vertice[side_idx%3].y), euclid.Point2(tri_vertice[(side_idx+1)%3].x, tri_vertice[(side_idx+1)%3].y))
     height = side.distance(euclid.Point2(tri_vertice[(side_idx+2)%3].x, tri_vertice[(side_idx+2)%3].y))
@@ -30,6 +27,8 @@ def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
 
     position = side.p + side.v*.5
     rotation = angle(euclid.Vector2(side.v[1], side.v[0]), euclid.Vector2(0., rectangle._size[1]))
+    scaling = euclid.Point2(0.1, 0.1)
+    # scaling = euclid.Point2(a/rectangle._size[0], b/rectangle._size[1])
 
     return position, scaling, rotation
 
@@ -43,13 +42,15 @@ if __name__ == "__main__":
     # render label into path
     glyph = svg.Path.read(f'./example/svg/0123.svg', flip_y=True)
     label_path = svg.Path.combine([(glyph[int(c)], np.array([1., 0.])) for c in label])
-    p, s, r = fit_rect_in_triangle(vertices, 2, label_path._bbox)
+    p, s, r = fit_rect_in_triangle(vertices, 0, label_path._bbox)
 
     # a = angle(euclid.Vector2(0, 1), euclid.Vector2(0, -2.))
     # print(a)
 
-    label_path.rotate(r, anchor=label_path._bbox._center)
-    label_path.translate(p-label_path._bbox._center)
+    label_path.scale(s[0], s[1])
+    pivot = label_path._bbox._center+np.array([0, label_path._bbox._size[1]*-.5])
+    label_path.rotate(r, anchor=pivot)
+    label_path.translate(p-pivot)
 
     label_path.triangulate(merge_to_model=model)
     target_path.triangulate(merge_to_model=model)
