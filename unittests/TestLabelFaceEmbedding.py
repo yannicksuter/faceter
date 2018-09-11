@@ -9,7 +9,7 @@ import svg
 import Exporter
 import math
 
-def angle(v1, v2):
+def rotation_angle(v1, v2):
     angle = math.atan2(v2[1], v2[0]) - math.atan2(v1[1], v1[0])
     if angle < 0.:
         angle += (2. * math.pi)
@@ -24,11 +24,11 @@ def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
     # Largest inscribing rectangle
     a = euclid.LineSegment2(side).length * 0.5
     b = height * 0.5
+    n = euclid.Vector2(side.v[1], side.v[0]).normalized()
 
-    position = side.p + side.v*.5
-    rotation = angle(euclid.Vector2(side.v[1], side.v[0]), euclid.Vector2(0., rectangle._size[1]))
+    position = side.p + side.v*.5 - 2*n
+    rotation = rotation_angle(n, euclid.Vector2(0., rectangle._size[1]))
     scaling = euclid.Point2(0.1, 0.1)
-    # scaling = euclid.Point2(a/rectangle._size[0], b/rectangle._size[1])
 
     return position, scaling, rotation
 
@@ -42,17 +42,15 @@ if __name__ == "__main__":
     # render label into path
     glyph = svg.Path.read(f'./example/svg/0123.svg', flip_y=True)
     label_path = svg.Path.combine([(glyph[int(c)], np.array([1., 0.])) for c in label])
-    p, s, r = fit_rect_in_triangle(vertices, 0, label_path._bbox)
-
-    # a = angle(euclid.Vector2(0, 1), euclid.Vector2(0, -2.))
-    # print(a)
+    p, s, r = fit_rect_in_triangle(vertices, 1, label_path._bbox)
 
     label_path.scale(s[0], s[1])
     pivot = label_path._bbox._center+np.array([0, label_path._bbox._size[1]*-.5])
     label_path.rotate(r, anchor=pivot)
     label_path.translate(p-pivot)
 
-    label_path.triangulate(merge_to_model=model)
-    target_path.triangulate(merge_to_model=model)
+    embedded_model = target_path.embed([label_path.triangulate()], group_name='svg')
+    embedded_model.get_group('svg')._material._diffuse = [1., 0., 0.]
+    embedded_model.extrude(1., faces=embedded_model.get_group('svg')._faces)
 
-    Exporter.write(model, f'./export/test_label.obj')
+    Exporter.write(embedded_model, f'./export/test_label.obj')

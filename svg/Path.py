@@ -219,7 +219,7 @@ class Path:
                     in_idx = v_in_idx
         return out_idx, in_idx
 
-    def triangulate(self, merge_to_model=None):
+    def triangulate(self, z=0., merge_to_model=None):
         res = []
         for outer, inner in self.split_shapes().items():
             # inner shape must be counter clockwise oriented
@@ -247,7 +247,7 @@ class Path:
                     #if shared vertices are used, inner and outer point to bridge are the same
                     vertices.insert(outer_idx+len(shape._vertices)+2, vertices[outer_idx])
 
-            res.append((Shape(vertices).triangulate(), outer, inner))
+            res.append((Shape(vertices).triangulate(z), outer, inner))
 
         # optional: merge results into target model
         if merge_to_model != None:
@@ -291,7 +291,7 @@ class Path:
         bbox = self._bbox
         return np.absolute(bbox[1] - bbox[0])
 
-    def embed(self, other, group_name=None):
+    def embed(self, other, group_name=None, z=0.):
         """ Embeds a triangulated construct defined by other (list of tuples, result from path triangulation). """
         if isinstance(other, list):
             consolidated_model = Model()
@@ -303,9 +303,9 @@ class Path:
                     self._shapes.append(outer.clone().reverse())
                     # 3) add inner shapes as triangulated objects by themself
                     for inner_shape in inner_list:
-                        consolidated_model.merge(inner_shape[0].clone().reverse().triangulate(), group_name='shape')
+                        consolidated_model.merge(inner_shape[0].clone().reverse().triangulate(z), group_name='shape')
             # 4) triangulate outer shape
-            path_models = self.triangulate()
+            path_models = self.triangulate(z)
             for m in path_models:
                 consolidated_model.merge(m[0], group_name='shape')
             return consolidated_model

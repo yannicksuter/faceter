@@ -81,10 +81,10 @@ class Shape:
                     return True
         return False
 
-    def triangulate(self):
+    def triangulate(self, z=0.):
         """Triangulate shape using ear clipping algorithm."""
         model = Model()
-        v_list = [np.array([v[0], v[1], 0.]) for v in self._vertices]
+        v_list = [np.array([v[0], v[1], z]) for v in self._vertices]
         v_list_len = len(v_list)
         while v_list_len > 3:
             for i,v in enumerate(v_list):

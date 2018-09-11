@@ -12,6 +12,29 @@ import MtxMath
 from euclid import euclid
 import numpy as np
 
+def rotation_angle(v1, v2):
+    angle = math.atan2(v2[1], v2[0]) - math.atan2(v1[1], v1[0])
+    if angle < 0.:
+        angle += (2. * math.pi)
+    return angle
+
+def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
+    """ http://mathcountsnotes.blogspot.com/2013/05/the-largest-rectangle-inscribed-in-any.html """
+
+    side = euclid.Line2(euclid.Point2(tri_vertice[side_idx%3].x, tri_vertice[side_idx%3].y), euclid.Point2(tri_vertice[(side_idx+1)%3].x, tri_vertice[(side_idx+1)%3].y))
+    height = side.distance(euclid.Point2(tri_vertice[(side_idx+2)%3].x, tri_vertice[(side_idx+2)%3].y))
+
+    # Largest inscribing rectangle
+    a = euclid.LineSegment2(side).length * 0.5
+    b = height * 0.5
+    n = euclid.Vector2(side.v[1], side.v[0]).normalized()
+
+    position = side.p + side.v*.5 - n
+    rotation = rotation_angle(n, euclid.Vector2(0., rectangle._size[1]))
+    scaling = euclid.Point2(0.1, 0.1)
+
+    return position, scaling, rotation
+
 def embed_label(model, face, label, glyph):
     # transform face to shape (into which we will embed the label)
     transform = MtxMath.conv_to_euclid(VecMath.rotate_fromto_matrix(face._norm, np.array([0., 0., 1.])))
@@ -22,15 +45,19 @@ def embed_label(model, face, label, glyph):
     label_path = svg.Path.combine([(glyph[int(c)], np.array([1., 0.])) for c in label])
 
     # move/scale label to fit into target triangle
-
-    raise NotImplementedError
+    p, s, r = fit_rect_in_triangle(vertices, 0, label_path._bbox)
+    label_path.scale(s[0], s[1])
+    pivot = label_path._bbox._center+np.array([0, label_path._bbox._size[1]*-.5])
+    label_path.rotate(r, anchor=pivot)
+    label_path.translate(p-pivot)
 
     # embed the label
-    embedded_model = target_path.embed([path.triangulate() for path in label_path], group_name='svg')
+    embedded_model = target_path.embed([label_path.triangulate(z=vertices[0].z)], group_name='svg', z=vertices[0].z)
     embedded_model.transform(transform.inverse())
 
     # (optional) extrude the label
-    raise NotImplementedError
+    embedded_model.get_group('svg')._material._diffuse = [1., 0., 0.]
+    embedded_model.extrude(-1., faces=embedded_model.get_group('svg')._faces)
 
     # replace initial face with new 'labeled face'
     model.remove_face(face)

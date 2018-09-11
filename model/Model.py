@@ -1,4 +1,5 @@
 import numpy as np
+from euclid import euclid
 
 from model.Face import Face
 from model.Group import Group
@@ -168,8 +169,11 @@ class Model:
         if face in self._faces:
             self._faces.remove(face)
 
-    def transform(self, matrix):
-        pass
+    def transform(self, mtx):
+        for i, v in enumerate(self._vertices):
+            vt = mtx * euclid.Vector3(v[0], v[1], v[2])
+            self._vertices[i] = np.array([vt[0], vt[1], vt[2]])
+        self._update()
 
     def merge(self, model, group_name=None):
         if not isinstance(model, Model):
