@@ -20,16 +20,21 @@ def rotation_angle(v1, v2):
 
 def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
     """ http://mathcountsnotes.blogspot.com/2013/05/the-largest-rectangle-inscribed-in-any.html """
-
-    side = euclid.Line2(euclid.Point2(tri_vertice[side_idx%3].x, tri_vertice[side_idx%3].y), euclid.Point2(tri_vertice[(side_idx+1)%3].x, tri_vertice[(side_idx+1)%3].y))
-    height = side.distance(euclid.Point2(tri_vertice[(side_idx+2)%3].x, tri_vertice[(side_idx+2)%3].y))
+    A = euclid.Point2(tri_vertice[side_idx%3+0].x, tri_vertice[side_idx%3+0].y)
+    B = euclid.Point2(tri_vertice[side_idx%3+1].x, tri_vertice[side_idx%3+1].y)
+    C = euclid.Point2(tri_vertice[side_idx%3+2].x, tri_vertice[side_idx%3+2].y)
+    side = euclid.Line2(A, B)
+    height = side.distance(C)
 
     # Largest inscribing rectangle
     a = euclid.LineSegment2(side).length * 0.5
     b = height * 0.5
     n = euclid.Vector2(side.v[1], side.v[0]).normalized()
 
-    position = side.p + side.v*.5 - n
+    position = side.p + side.v*.5
+    dir = (C - position).normalized()
+    position = position + dir
+
     rotation = rotation_angle(n, euclid.Vector2(0., rectangle._size[1]))
     scaling = euclid.Point2(0.1, 0.1)
 
@@ -62,6 +67,8 @@ def embed_label(model, face, label, glyph):
     # replace initial face with new 'labeled face'
     model.remove_face(face)
     model.merge(embedded_model)
+
+    return embedded_model
 
 if __name__ == "__main__":
     obj_name = 'abstract'
@@ -105,10 +112,12 @@ if __name__ == "__main__":
         lbl_group = model.add_group('label')
         lbl_group._material._diffuse = [1., 0., 0.]
         lbl_face._group = lbl_group
-        embed_label(model, lbl_face, f'{idx}', paths_0123)
+
+        embedded_model = embed_label(model, lbl_face, f'{idx}', paths_0123)
+        Exporter.write(embedded_model, f'./export/_{obj_name}_part_{idx+1}_embedded.obj', embedded_model._faces[0]._norm)
 
         shell_model.merge(model, group_name=group._name)
         Exporter.write(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 
-    Exporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')
+    # Exporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')
     Exporter.write(shell_model, f'./export/_{obj_name}_shell.obj')
