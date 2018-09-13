@@ -40,7 +40,7 @@ def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
 
     return position, scaling, rotation
 
-def embed_label(model, face, label, glyph):
+def embed_label(model, face, side, label, glyph):
     # transform face to shape (into which we will embed the label)
     transform = MtxMath.conv_to_euclid(VecMath.rotate_fromto_matrix(face._norm, np.array([0., 0., 1.])))
     vertices = [transform * euclid.Point3(v[0], v[1], v[2]) for v in face._vertices]
@@ -50,7 +50,7 @@ def embed_label(model, face, label, glyph):
     label_path = svg.Path.combine([(glyph[int(c)], np.array([1., 0.])) for c in label])
 
     # move/scale label to fit into target triangle
-    p, s, r = fit_rect_in_triangle(vertices, 0, label_path._bbox)
+    p, s, r = fit_rect_in_triangle(vertices, side, label_path._bbox)
     label_path.scale(s[0], s[1])
     pivot = label_path._bbox._center+np.array([0, label_path._bbox._size[1]*-.5])
     label_path.rotate(r, anchor=pivot)
@@ -62,7 +62,7 @@ def embed_label(model, face, label, glyph):
 
     # (optional) extrude the label
     embedded_model.get_group('svg')._material._diffuse = [1., 0., 0.]
-    embedded_model.extrude(-1., faces=embedded_model.get_group('svg')._faces)
+    embedded_model.extrude(1., faces=embedded_model.get_group('svg')._faces)
 
     # replace initial face with new 'labeled face'
     model.remove_face(face)
@@ -84,17 +84,26 @@ if __name__ == "__main__":
     target_lid_size = 100. #mm^2
     faceted_model = Model()
 
+    facets = []
     for face_id, face in enumerate(obj_model._faces):
         print(f'processing facet #{face_id}')
         face_surface = face._area
         ttop_size = (target_lid_size / math.sqrt(face_surface)) / 10
         facet = Facet(face, obj_model, brick_height=15., top_height=25., top_size=ttop_size)
+        facets.append((face, facet))
         faceted_model.merge(facet, group_name=f'facet_{face_id}')
+
+    # LUT: merge edge labels
+    labels = {}
+    for facet in facets:
+        labels = {**labels, **facet[1]._top_side_labels}
+    # for label, key in enumerate(labels):
+    #     print(f'{label} -> {key} = {labels[key][0]} - {labels[key][1]}')
 
     faceted_model.triangulate()
 
     shell_model = Model()
-    paths_0123 = svg.Path.read(f'./example/svg/0123.svg')
+    paths_0123 = svg.Path.read(f'./example/svg/0123.svg', flip_y=True)
 
     for idx, group in enumerate(faceted_model._groups):
         # create shell
@@ -108,13 +117,15 @@ if __name__ == "__main__":
         generate_shell(model, thickness, visibility)
 
         #add label
-        lbl_face = max([(face, face._area) for face in model.get_faces_by_tag('facet_top_layer')], key=lambda item: item[1])[0]
         lbl_group = model.add_group('label')
         lbl_group._material._diffuse = [1., 0., 0.]
-        lbl_face._group = lbl_group
-
-        embedded_model = embed_label(model, lbl_face, f'{idx}', paths_0123)
-        Exporter.write(embedded_model, f'./export/_{obj_name}_part_{idx+1}_embedded.obj', embedded_model._faces[0]._norm)
+        for lbl_face in model.get_faces_by_tag('facet_top_layer'):
+            for side_idx, edge in enumerate(lbl_face._edges):
+                for label, key in enumerate(labels):
+                    if edge.is_equal(labels[key]):
+                        print(f'obj#{idx+1} adding label=\'{label}\' to side={side_idx}')
+                        embedded_model = embed_label(model, lbl_face, side_idx, f'{label}', paths_0123)
+                        # Exporter.write(embedded_model, f'./export/_{obj_name}_part_{idx+1}_embedded.obj', embedded_model._faces[0]._norm)
 
         shell_model.merge(model, group_name=group._name)
         Exporter.write(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)

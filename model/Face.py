@@ -48,6 +48,9 @@ class Face:
     def get_vertex(self, idx):
         return self._model._vertices[self._vertex_ids[idx]]
 
+    def get_vertex_by_id(self, id):
+        return self._model._vertices[id]
+
     def contains_vertex_id(self, vertex_id):
         """ Returns True if vertex_id is used by the face """
         for id in self._vertex_ids:
