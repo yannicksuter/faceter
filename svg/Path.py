@@ -58,6 +58,13 @@ class Path:
             elif cur_token[0:1] == 'v' or cur_token[0:1] == 'V':
                 # vertical lineto: relative/absolute mode
                 token_idx += 1
+            elif cur_token[0:1] == 'c' or cur_token[0:1] == 'C':
+                # curveto: relative/absolute mode
+                token_idx += 1
+            elif cur_token[0:1] == 's' or cur_token[0:1] == 'S':
+                # curveto: relative/absolute mode
+                token_idx += 1
+
             else:
                 v = cls.__read_vec(token[token_idx])
                 if absolute_mode:
