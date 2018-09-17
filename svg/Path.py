@@ -51,27 +51,43 @@ class Path:
                 token_idx += 1
             elif cur_token[0:1] == 'l' or cur_token[0:1] == 'L':
                 # lineto: relative/absolute mode
-                token_idx += 1
+                absolute_mode = False if cur_token[0:1] == 'l' else True
+                if token_idx == 0 or absolute_mode:
+                    cur_pos = cls.__read_vec(token[token_idx+1])
+                else:
+                    cur_pos += cls.__read_vec(token[token_idx+1])
+                cur_shape = [cur_pos.copy()]
+                token_idx += 2
             elif cur_token[0:1] == 'h' or cur_token[0:1] == 'H':
                 # horizontal lineto: relative/absolute mode
                 token_idx += 1
             elif cur_token[0:1] == 'v' or cur_token[0:1] == 'V':
                 # vertical lineto: relative/absolute mode
                 token_idx += 1
+            # cubic Bézier curve commands
             elif cur_token[0:1] == 'c' or cur_token[0:1] == 'C':
-                # curveto: relative/absolute mode
+                # curveto/bezier: relative/absolute mode
                 token_idx += 1
             elif cur_token[0:1] == 's' or cur_token[0:1] == 'S':
-                # curveto: relative/absolute mode
+                # curveto/bezier: relative/absolute mode
                 token_idx += 1
-
+            # quadratic Bézier curve commands
+            elif cur_token[0:1] == 'q' or cur_token[0:1] == 'Q':
+                # quadratic bezier: relative/absolute mode
+                token_idx += 1
+            elif cur_token[0:1] == 't' or cur_token[0:1] == 'T':
+                # smooth quadratic bezier: relative/absolute mode
+                token_idx += 1
             else:
-                v = cls.__read_vec(token[token_idx])
-                if absolute_mode:
-                    cur_pos = v
-                else:
-                    cur_pos += v
-                cur_shape.append(cur_pos.copy())
+                try:
+                    v = cls.__read_vec(token[token_idx])
+                    if absolute_mode:
+                        cur_pos = v
+                    else:
+                        cur_pos += v
+                    cur_shape.append(cur_pos.copy())
+                except:
+                    print(f'Unsupported SVG command, error parsing token[{token_idx}]: {token[token_idx]}')
                 token_idx += 1
         return cls
 
