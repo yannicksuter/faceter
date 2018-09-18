@@ -45,6 +45,7 @@ class Path:
                 # closepath
                 if vm.equal(cur_shape[-1], cur_shape[0]):
                     cur_shape = cur_shape[:-1]
+                print(f'{cur_shape}')
                 # it is possible that a shape can have twisted/shared vertices (like an 8)
                 for shape in cls.split_twisted_shape(cur_shape):
                     cls._shapes.append(Shape(shape))
@@ -56,7 +57,6 @@ class Path:
                     cur_pos = cls.__read_vec(token[token_idx+1])
                 else:
                     cur_pos += cls.__read_vec(token[token_idx+1])
-                cur_shape = [cur_pos.copy()]
                 token_idx += 2
             elif cur_token[0:1] == 'h' or cur_token[0:1] == 'H':
                 # horizontal lineto: relative/absolute mode
@@ -74,7 +74,22 @@ class Path:
             # quadratic Bézier curve commands
             elif cur_token[0:1] == 'q' or cur_token[0:1] == 'Q':
                 # quadratic bezier: relative/absolute mode
+                absolute_mode = False if cur_token[0:1] == 'q' else True
                 token_idx += 1
+                while True:
+                    try:
+                        # read control and endpoint
+                        cp = cls.__read_vec(token[token_idx])
+                        ep =  cls.__read_vec(token[token_idx+1])
+                        if absolute_mode:
+                            cur_shape.extend(cls.__interpolateQuadratic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp), cls.__convertVector2D(ep)))
+                            cur_pos = ep
+                        else:
+                            cur_shape.extend(cls.__interpolateQuadratic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp+cur_pos), cls.__convertVector2D(ep+cur_pos)))
+                            cur_pos += ep
+                        token_idx += 2
+                    except:
+                        break
             elif cur_token[0:1] == 't' or cur_token[0:1] == 'T':
                 # smooth quadratic bezier: relative/absolute mode
                 token_idx += 1
@@ -168,9 +183,22 @@ class Path:
     def __read_vec(self, token):
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
+    def __convertVector2D(self, v):
+        return euclid.Vector2(v[0], v[1])
+
+    def __interpolateQuadratic(self, start, cntrl_point, end, step=.1):
+        spline = []
+        d1 = cntrl_point-start
+        d2 = end-cntrl_point
+        for t in np.arange(step, 1.+step, step):
+            p1 = start+t*d1
+            p2 = cntrl_point+t*d2
+            bp = p1+t*(p2-p1)
+            spline.append(np.array([bp.x, bp.y]))
+        spline.append(end.copy())
+        return spline
+
     def get_sublist_cycled(self, list, start, end):
-        # print(f'{start} -> {end}')
-        # print(f'{[i%len(list) for i in range(start+len(list), end+1+len(list))]}')
         start = start
         end = end if end > start else end + len(list)
         return [list[i%len(list)] for i in range(start, end)]
@@ -180,7 +208,6 @@ class Path:
         for idx, start_io in enumerate(shared_vertices):
             end_io = shared_vertices[(idx+1)%len(shared_vertices)]
 
-            # print(f'{start_io[0]} -> {end_io[0]}({end_io[1]}) -> {start_io[1]}({start_io[0]})')
             vertices = self.get_sublist_cycled(inner._vertices, start_io[0], end_io[0])
             vertices += self.get_sublist_cycled(outer._vertices, end_io[1], start_io[1])
 
