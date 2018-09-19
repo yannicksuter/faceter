@@ -6,7 +6,7 @@ import Exporter
 from model import Model
 
 if __name__ == "__main__":
-    filename = 'y'
+    filename = '0123'
     paths = svg.Path.read(f'./example/svg/{filename}.svg', flip_y=True)
 
     combined_model = Model()

@@ -27,25 +27,37 @@ class Path:
             cls._id = description['id']
 
         cur_pos = None
-        token = description['d'].split(' ')
+        token = cls.splitDescription(description['d'])
         token_idx = 0
         while token_idx < len(token):
             cur_token = token[token_idx]
             # print(f'{cur_token}')
             if cur_token[0:1] == 'm' or cur_token[0:1] == 'M':
                 # moveto: relative/absolute mode
+                cur_shape = []
                 absolute_mode = False if cur_token[0:1] == 'm' else True
-                if token_idx == 0 or absolute_mode:
-                    cur_pos = cls.__read_vec(token[token_idx+1])
-                else:
-                    cur_pos += cls.__read_vec(token[token_idx+1])
-                cur_shape = [cur_pos.copy()]
-                token_idx += 2
+                token_idx += 1
+                while True:
+                    try:
+                        # v = cls.__read_vec(token[token_idx])
+                        v = cls.__readVector2D(token, token_idx)
+                        if token_idx == 1 or absolute_mode:
+                            cur_pos = v
+                        else:
+                            cur_pos += v
+                        token_idx += 2
+                        cur_shape.append(cur_pos.copy())
+                    except:
+                        break
             elif cur_token[0:1] == 'z' or cur_token[0:1] == 'Z':
                 # closepath
                 if vm.equal(cur_shape[-1], cur_shape[0]):
                     cur_shape = cur_shape[:-1]
-                print(f'{cur_shape}')
+
+                # debug ouput, plot shape
+                # for v in cur_shape:
+                #     print(f'{cls.__convertVector2D(v)}')
+
                 # it is possible that a shape can have twisted/shared vertices (like an 8)
                 for shape in cls.split_twisted_shape(cur_shape):
                     cls._shapes.append(Shape(shape))
@@ -53,11 +65,19 @@ class Path:
             elif cur_token[0:1] == 'l' or cur_token[0:1] == 'L':
                 # lineto: relative/absolute mode
                 absolute_mode = False if cur_token[0:1] == 'l' else True
-                if token_idx == 0 or absolute_mode:
-                    cur_pos = cls.__read_vec(token[token_idx+1])
-                else:
-                    cur_pos += cls.__read_vec(token[token_idx+1])
-                token_idx += 2
+                token_idx += 1
+                while True:
+                    try:
+                        # v = cls.__read_vec(token[token_idx])
+                        v = cls.__readVector2D(token, token_idx)
+                        if token_idx == 1 or absolute_mode:
+                            cur_pos = v
+                        else:
+                            cur_pos += v
+                        token_idx += 2
+                        cur_shape.append(cur_pos.copy())
+                    except:
+                        break
             elif cur_token[0:1] == 'h' or cur_token[0:1] == 'H':
                 # horizontal lineto: relative/absolute mode
                 token_idx += 1
@@ -79,31 +99,25 @@ class Path:
                 while True:
                     try:
                         # read control and endpoint
-                        cp = cls.__read_vec(token[token_idx])
-                        ep =  cls.__read_vec(token[token_idx+1])
+                        # cp = cls.__read_vec(token[token_idx])
+                        cp = cls.__readVector2D(token, token_idx)
+                        ep = cls.__readVector2D(token, token_idx+2)
+
+                        # ep =  cls.__read_vec(token[token_idx+1])
                         if absolute_mode:
                             cur_shape.extend(cls.__interpolateQuadratic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp), cls.__convertVector2D(ep)))
                             cur_pos = ep
                         else:
-                            cur_shape.extend(cls.__interpolateQuadratic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp+cur_pos), cls.__convertVector2D(ep+cur_pos)))
+                            cur_shape.extend(cls.__interpolateQuadratic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp+cur_pos), cls.__convertVector2D(ep+cur_pos), step=0.1))
                             cur_pos += ep
-                        token_idx += 2
+                        token_idx += 4
                     except:
                         break
             elif cur_token[0:1] == 't' or cur_token[0:1] == 'T':
                 # smooth quadratic bezier: relative/absolute mode
                 token_idx += 1
             else:
-                try:
-                    v = cls.__read_vec(token[token_idx])
-                    if absolute_mode:
-                        cur_pos = v
-                    else:
-                        cur_pos += v
-                    cur_shape.append(cur_pos.copy())
-                except:
-                    print(f'Unsupported SVG command, error parsing token[{token_idx}]: {token[token_idx]}')
-                token_idx += 1
+                raise RuntimeError(f'Error parsing SVG path id={cls._id}, unexpected token={cur_token}')
         return cls
 
     @classmethod
@@ -180,8 +194,30 @@ class Path:
                     break
         return splits
 
+    def splitDescription(self, path_description):
+        ext_description = ''
+        for c in path_description:
+            prev_c = ext_description[-1:]
+            if c.isalpha():
+                if prev_c != ' ' and len(prev_c) != 0:
+                    ext_description += f' '
+                ext_description += f'{c} '
+            elif c == '-':
+                if prev_c != ' ' and len(prev_c) != 0:
+                    ext_description += f' '
+                ext_description += f'{c}'
+            elif c == ',' or c == ' ':
+                if prev_c != ' ' and len(prev_c) != 0:
+                    ext_description += f' '
+            else:
+                ext_description += c
+        return ext_description.strip().split(' ')
+
     def __read_vec(self, token):
         return np.array([t(s) for t, s in zip((float, float), token.split(','))])
+
+    def __readVector2D(self, tokens, cur_index):
+        return np.array([float(tokens[cur_index]), float(tokens[cur_index+1])])
 
     def __convertVector2D(self, v):
         return euclid.Vector2(v[0], v[1])
@@ -190,7 +226,7 @@ class Path:
         spline = []
         d1 = cntrl_point-start
         d2 = end-cntrl_point
-        for t in np.arange(step, 1.+step, step):
+        for t in np.arange(step, 1., step):
             p1 = start+t*d1
             p2 = cntrl_point+t*d2
             bp = p1+t*(p2-p1)
@@ -387,9 +423,10 @@ if __name__ == "__main__":
     combined_model = Model()
     for path in paths:
         print(f'triangulating path={path._id} shapes={len(path._shapes)}')
-        path_models = path.triangulate()
-        for m in path_models:
-            combined_model.merge(m[0])
+        path.triangulate(merge_to_model=combined_model)
+        # path_models = path.triangulate()
+        # for m in path_models:
+        #     combined_model.merge(m[0])
 
     combined_model.flip(axis_y=True)
 

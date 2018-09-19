@@ -2,7 +2,12 @@
 Script to explode a 3d (obj) file into printable pieces.
 
 ## WhereWasI
-* add b-spline/interpolation support to svg/path
+* illustrator svg parsing
+* model/merge: when merging models, group definitions are lost
+* add extrude options to svg/shape, transform 2d shape to closed 3d model
+* explore boolean operations on model or parametric models
+    * support box and cylinder
+    * support and/or/xor operations
 * remove cur_group concept from model, leads to confusion. better to be stateless
 * improving rev-triangulation algorithm to be also robust with polygon(P>4) -> use ear clipping approach for 3d (P>4) polygon
 * generate interesting triangle fields, first attempt using delaunay
