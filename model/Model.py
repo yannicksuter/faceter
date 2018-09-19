@@ -250,7 +250,7 @@ class Model:
         #remove old face
         self.remove_face(face)
 
-    def extrude_face(self, face, dir, length, edges, assign_group=None):
+    def extrude_face(self, face, dir, length, edges, invert_inner_face, assign_group=None):
         """Extrudes a single face, given a direction and a extrusion length"""
         offset = dir*length
         #add new top face
@@ -261,14 +261,19 @@ class Model:
         for e in edges:
             self.add_face([self._vertices[e.v0_id], self._vertices[e.v1_id], self._vertices[e.v1_id]+offset, self._vertices[e.v0_id]+offset])
 
-        self.remove_face(face)
+        if invert_inner_face:
+            face.reverse()
+        else:
+            self.remove_face(face)
 
-    def extrude(self, length, faces=None, group=None):
+    def extrude(self, length, faces=None, group=None, invert_inner_face=False):
         """Convenience method to extrude multiple faces/groups with a single call."""
         if faces:
+            edges = {}
+            for face in faces:
+                edges[face] = [edge for edge in face._edges if is_border_edge(edge, faces)]
             for face in faces.copy():
-                edges = [edge for edge in face._edges if is_border_edge(edge, faces)]
-                self.extrude_face(face, face._norm, length, edges, assign_group=group)
+                self.extrude_face(face, face._norm, length, edges[face], invert_inner_face, assign_group=group)
 
 def is_border_edge(edge, faces):
     for face in faces:

@@ -422,6 +422,12 @@ class Path:
 
         return res
 
+    def extrude(self, length):
+        res = Model()
+        self.triangulate(merge_to_model=res)
+        res.extrude(length, faces=res._faces, invert_inner_face=True)
+        return res
+
     @staticmethod
     def read(filename, flip_x=False, flip_y=False):
         _paths = []
@@ -489,25 +495,3 @@ class Path:
             res.merge(path)
             pos += (p[1] + np.array([path._bbox._size[0], 0.]))
         return res
-
-if __name__ == "__main__":
-    # filename = '0123'
-    # filename = 'yannick'
-    # filename = 'yannick2'
-    filename = 'test'
-    paths = Path.read(f'./example/svg/{filename}.svg')
-    # paths = Path.read(f'./example/svg/yannick.svg')
-    # paths = Path.read(f'./example/svg/yannick2.svg')
-    # paths = Path.read(f'./example/svg/test.svg')
-
-    combined_model = Model()
-    for path in paths:
-        print(f'triangulating path={path._id} shapes={len(path._shapes)}')
-        path.triangulate(merge_to_model=combined_model)
-        # path_models = path.triangulate()
-        # for m in path_models:
-        #     combined_model.merge(m[0])
-
-    combined_model.flip(axis_y=True)
-
-    Exporter.write(combined_model, f'./export/_{filename}.obj')
