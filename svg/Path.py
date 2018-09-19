@@ -26,20 +26,20 @@ class Path:
         if 'id' in description:
             cls._id = description['id']
 
+        cur_shape = []
         cur_pos = None
         token = cls.splitDescription(description['d'])
         token_idx = 0
         while token_idx < len(token):
             cur_token = token[token_idx]
+            absolute_mode = cur_token[0:1].isupper()
             # print(f'{cur_token}')
             if cur_token[0:1] == 'm' or cur_token[0:1] == 'M':
                 # moveto: relative/absolute mode
-                cur_shape = []
-                absolute_mode = False if cur_token[0:1] == 'm' else True
+                cur_shape = cls.__closePath(cur_shape)
                 token_idx += 1
                 while True:
                     try:
-                        # v = cls.__read_vec(token[token_idx])
                         v = cls.__readVector2D(token, token_idx)
                         if token_idx == 1 or absolute_mode:
                             cur_pos = v
@@ -51,24 +51,13 @@ class Path:
                         break
             elif cur_token[0:1] == 'z' or cur_token[0:1] == 'Z':
                 # closepath
-                if vm.equal(cur_shape[-1], cur_shape[0]):
-                    cur_shape = cur_shape[:-1]
-
-                # debug ouput, plot shape
-                # for v in cur_shape:
-                #     print(f'{cls.__convertVector2D(v)}')
-
-                # it is possible that a shape can have twisted/shared vertices (like an 8)
-                for shape in cls.split_twisted_shape(cur_shape):
-                    cls._shapes.append(Shape(shape))
+                cur_shape = cls.__closePath(cur_shape)
                 token_idx += 1
             elif cur_token[0:1] == 'l' or cur_token[0:1] == 'L':
                 # lineto: relative/absolute mode
-                absolute_mode = False if cur_token[0:1] == 'l' else True
                 token_idx += 1
                 while True:
                     try:
-                        # v = cls.__read_vec(token[token_idx])
                         v = cls.__readVector2D(token, token_idx)
                         if token_idx == 1 or absolute_mode:
                             cur_pos = v
@@ -78,32 +67,74 @@ class Path:
                         cur_shape.append(cur_pos.copy())
                     except:
                         break
+            # elif cur_token[0:1] == 'v' or cur_token[0:1] == 'V':
             elif cur_token[0:1] == 'h' or cur_token[0:1] == 'H':
                 # horizontal lineto: relative/absolute mode
-                token_idx += 1
+                dh = float(token[token_idx+1])
+                if absolute_mode:
+                    cur_pos[0] = dh
+                else:
+                    cur_pos[0] += dh
+                cur_shape.append(cur_pos.copy())
+                token_idx += 2
             elif cur_token[0:1] == 'v' or cur_token[0:1] == 'V':
+            # elif cur_token[0:1] == 'h' or cur_token[0:1] == 'H':
                 # vertical lineto: relative/absolute mode
-                token_idx += 1
+                dv = float(token[token_idx+1])
+                if absolute_mode:
+                    cur_pos[1] = dv
+                else:
+                    cur_pos[1] += dv
+                cur_shape.append(cur_pos.copy())
+                token_idx += 2
             # cubic Bézier curve commands
             elif cur_token[0:1] == 'c' or cur_token[0:1] == 'C':
-                # curveto/bezier: relative/absolute mode
+                # cubic bezier: relative/absolute mode
                 token_idx += 1
+                while True:
+                    try:
+                        # read control and endpoints
+                        cp1 = cls.__readVector2D(token, token_idx)
+                        cp2 = cls.__readVector2D(token, token_idx+2)
+                        ep = cls.__readVector2D(token, token_idx+4)
+
+                        if absolute_mode:
+                            cur_shape.extend(cls.__interpolateCubic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp1), cls.__convertVector2D(cp2),  cls.__convertVector2D(ep)))
+                            cur_pos = ep
+                        else:
+                            cur_shape.extend(cls.__interpolateCubic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp1+cur_pos), cls.__convertVector2D(cp2+cur_pos), cls.__convertVector2D(ep+cur_pos)))
+                            cur_pos += ep
+                        token_idx += 6
+                    except:
+                        break
             elif cur_token[0:1] == 's' or cur_token[0:1] == 'S':
                 # curveto/bezier: relative/absolute mode
                 token_idx += 1
+                while True:
+                    try:
+                        # read control and endpoints
+                        cp2 = cls.__readVector2D(token, token_idx)
+                        ep = cls.__readVector2D(token, token_idx + 2)
+
+                        if absolute_mode:
+                            raise NotImplementedError
+                            cur_pos = ep
+                        else:
+                            raise NotImplementedError
+                            cur_pos += ep
+                        token_idx += 4
+                    except:
+                        break
             # quadratic Bézier curve commands
             elif cur_token[0:1] == 'q' or cur_token[0:1] == 'Q':
                 # quadratic bezier: relative/absolute mode
-                absolute_mode = False if cur_token[0:1] == 'q' else True
                 token_idx += 1
                 while True:
                     try:
                         # read control and endpoint
-                        # cp = cls.__read_vec(token[token_idx])
                         cp = cls.__readVector2D(token, token_idx)
                         ep = cls.__readVector2D(token, token_idx+2)
 
-                        # ep =  cls.__read_vec(token[token_idx+1])
                         if absolute_mode:
                             cur_shape.extend(cls.__interpolateQuadratic(cls.__convertVector2D(cur_pos), cls.__convertVector2D(cp), cls.__convertVector2D(ep)))
                             cur_pos = ep
@@ -116,9 +147,40 @@ class Path:
             elif cur_token[0:1] == 't' or cur_token[0:1] == 'T':
                 # smooth quadratic bezier: relative/absolute mode
                 token_idx += 1
+                while True:
+                    try:
+                        # read control and endpoint
+                        ep = cls.__readVector2D(token, token_idx)
+
+                        if absolute_mode:
+                            raise NotImplementedError
+                            cur_pos = ep
+                        else:
+                            raise NotImplementedError
+                            cur_pos += ep
+                        token_idx += 2
+                    except:
+                        break
             else:
                 raise RuntimeError(f'Error parsing SVG path id={cls._id}, unexpected token={cur_token}')
+
+        cls.__closePath(cur_shape)
         return cls
+
+    def __closePath(self, cur_shape, debug=False):
+        if len(cur_shape) > 0:
+            if vm.equal(cur_shape[-1], cur_shape[0]):
+                cur_shape = cur_shape[:-1]
+
+            if debug:
+                for v in cur_shape:
+                    print(f'{cls.__convertVector2D(v)}')
+
+            # it is possible that a shape can have twisted/shared vertices (like an 8)
+            for shape in self.split_twisted_shape(cur_shape):
+                # print(f'adding shape(len={len(cur_shape)})')
+                self._shapes.append(Shape(shape))
+        return []
 
     @classmethod
     def from_shape(cls, shape):
@@ -213,14 +275,32 @@ class Path:
                 ext_description += c
         return ext_description.strip().split(' ')
 
-    def __read_vec(self, token):
-        return np.array([t(s) for t, s in zip((float, float), token.split(','))])
+    # def __read_vec(self, token):
+    #     return np.array([t(s) for t, s in zip((float, float), token.split(','))])
 
     def __readVector2D(self, tokens, cur_index):
         return np.array([float(tokens[cur_index]), float(tokens[cur_index+1])])
 
     def __convertVector2D(self, v):
         return euclid.Vector2(v[0], v[1])
+
+    def __interpolateCubic(self, start, cntrl_point1, cntrl_point2, end, step=.1):
+        spline = []
+        d1 = cntrl_point1-start
+        d2 = cntrl_point2-cntrl_point1
+        d3 = end-cntrl_point2
+        for t in np.arange(step, 1., step):
+            p1 = start+t*d1
+            p2 = cntrl_point1+t*d2
+            p3 = cntrl_point2+t*d3
+            dd1 = p2-p1
+            dd2 = p3-p2
+            pp1 = p1+t*dd1
+            pp2 = p2+t*dd2
+            ppp = pp1+t*(pp2-pp1)
+            spline.append(np.array([ppp.x, ppp.y]))
+        spline.append(np.array([end.x, end.y]))
+        return spline
 
     def __interpolateQuadratic(self, start, cntrl_point, end, step=.1):
         spline = []
@@ -231,7 +311,7 @@ class Path:
             p2 = cntrl_point+t*d2
             bp = p1+t*(p2-p1)
             spline.append(np.array([bp.x, bp.y]))
-        spline.append(end.copy())
+        spline.append(np.array([end.x, end.y]))
         return spline
 
     def get_sublist_cycled(self, list, start, end):
@@ -358,10 +438,10 @@ class Path:
                     try:
                         _paths.append(Path.from_description(elem.attrib).flip(flip_x, flip_y))
                     except Exception as e:
-                        print(f'Error loading shape: {e}')
+                        raise RuntimeError(f'Error loading shape:\n{e}')
             print(f'{len(_paths)} elements read from {filename}')
-        except:
-            print(f'Error while reading {filename}')
+        except Exception as e:
+            raise RuntimeError(f'Error while reading {filename}:\n{e}')
         return _paths
 
     @property
