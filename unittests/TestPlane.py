@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from Plane import Plane
+from primitives.Plane import Plane
 
 class TestPlane(unittest.TestCase):
     def test_intersect_plane_ray(self):

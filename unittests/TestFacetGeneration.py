@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from model import Model
-import Exporter
+import ObjExporter
 import math
 
 if __name__ == "__main__":
-    import ObjLoader
+    import ObjReader
 
     obj_name = 'abstract'
 
-    obj_data = ObjLoader.ObjLoader(f'./example/{obj_name}.obj')
+    obj_data = ObjReader.ObjLoader(f'./example/{obj_name}.obj')
     obj_model = Model.load_fromdata(obj_data, scale=1.)
     obj_model.simplify()
 
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     bbox_size = obj_model._size
     print(f'Boundingbox: [{bbox_size[0]}, {bbox_size[1]}, {bbox_size[2]}]')
 
-    Exporter.write(obj_model, f'./export/_{obj_name}.obj')
+    ObjExporter.write(obj_model, f'./export/_{obj_name}.obj')
 
     target_lid_size = 100.  # mm^2
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         faceted_model.merge(facet)
 
         # export single part
-        Exporter.write(facet, f'./export/_{obj_name}_part_{face_id+1}.obj', obj_model._faces[face_id]._norm)
+        ObjExporter.write(facet, f'./export/_{obj_name}_part_{face_id+1}.obj', obj_model._faces[face_id]._norm)
 
     # faceted_model.triangulate()
-    Exporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')
+    ObjExporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')

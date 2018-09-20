@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import svg
-import Exporter
+import ObjExporter
 import model
 import numpy as np
 
@@ -18,4 +18,4 @@ if __name__ == "__main__":
 
     combined_model.flip(axis_y=True)
 
-    Exporter.write(combined_model, f'./export/combined_{label}.obj')
+    ObjExporter.write(combined_model, f'./export/combined_{label}.obj')

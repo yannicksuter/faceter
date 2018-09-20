@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import math
-import ObjLoader, Exporter
-from Shell import *
+import ObjReader, ObjExporter
+from ModelUtility_Shell import *
 from model import *
-from Facet import Facet
+from ModelUtility_Facet import Facet
 import svg
 import VecMath
 import MtxMath
@@ -73,7 +73,7 @@ def embed_label(model, face, side, label, glyph):
 if __name__ == "__main__":
     obj_name = 'abstract'
 
-    obj_data = ObjLoader.ObjLoader(f'./example/{obj_name}.obj')
+    obj_data = ObjReader.ObjLoader(f'./example/{obj_name}.obj')
     obj_model = Model.load_fromdata(obj_data, scale=1.5)
 
     print(f'Faces: {len(obj_model._faces)}')
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                         # Exporter.write(embedded_model, f'./export/_{obj_name}_part_{idx+1}_embedded.obj', embedded_model._faces[0]._norm)
 
         shell_model.merge(model, group_name=group._name)
-        Exporter.write(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
+        ObjExporter.write(model, f'./export/_{obj_name}_part_{idx+1}.obj', model._faces[0]._norm)
 
     # Exporter.write(faceted_model, f'./export/_{obj_name}_faceted.obj')
-    Exporter.write(shell_model, f'./export/_{obj_name}_shell.obj')
+    ObjExporter.write(shell_model, f'./export/_{obj_name}_shell.obj')

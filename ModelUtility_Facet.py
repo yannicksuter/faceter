@@ -1,6 +1,6 @@
 import math
 from model import *
-import Exporter
+import ObjExporter
 
 class Facet(Model):
     def __init__(self, face, source_model, brick_height, top_height, top_size):

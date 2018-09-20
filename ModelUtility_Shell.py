@@ -1,8 +1,8 @@
 import sys
 import VecMath as vm
 from model import *
-from Plane import Plane
-import Exporter
+from primitives.Plane import Plane
+import ObjExporter
 
 def get_first_plane(vertex, faces):
     """ First plane: Find the plane which center is closest to the vertex """
@@ -96,8 +96,8 @@ if __name__ == "__main__":
 
     obj_name = 'cube'
 
-    import ObjLoader
-    obj_data = ObjLoader.ObjLoader(f'./example/{obj_name}.obj')
+    import ObjReader
+    obj_data = ObjReader.ObjLoader(f'./example/{obj_name}.obj')
     obj_model = Model.load_fromdata(obj_data, scale=40.)
     obj_model.simplify()
 
@@ -108,4 +108,4 @@ if __name__ == "__main__":
 
     generate_shell(obj_model, thickness, visibility)
 
-    Exporter.write(obj_model, f'./export/_{obj_name}_shell.obj')
+    ObjExporter.write(obj_model, f'./export/_{obj_name}_shell.obj')

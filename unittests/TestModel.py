@@ -1,23 +1,23 @@
 import unittest
-import ObjLoader
+import ObjReader
 from model import *
 
 class TestModel(unittest.TestCase):
     def test_simplify_quad(self):
-        obj_data = ObjLoader.ObjLoader('../example/quad.obj')
+        obj_data = ObjReader.ObjLoader('../example/quad.obj')
         obj_model = Model.load_fromdata(obj_data)
         obj_model.simplify()
         self.assertEqual(len(obj_model._faces), 1)
 
     def test_simplify_strip(self):
         # todo: unit test is still incorrect -> simplify should normaly reduce strip to 2 quads, ultimatively to 1 coplanar polygone
-        obj_data = ObjLoader.ObjLoader('../example/tri_strip.obj')
+        obj_data = ObjReader.ObjLoader('../example/tri_strip.obj')
         obj_model = Model.load_fromdata(obj_data)
         obj_model.simplify()
         self.assertEqual(len(obj_model._faces), 4)
 
     def test_simplify_cube(self):
-        obj_data = ObjLoader.ObjLoader('../example/cube.obj')
+        obj_data = ObjReader.ObjLoader('../example/cube.obj')
         obj_model = Model.load_fromdata(obj_data)
         """ before simplification:
         
@@ -53,7 +53,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(len(obj_model._faces), 6)
 
     def test_simplify_cube(self):
-        obj_data = ObjLoader.ObjLoader('../example/cube.obj')
+        obj_data = ObjReader.ObjLoader('../example/cube.obj')
         obj_model = Model.load_fromdata(obj_data)
         obj_model.simplify()
 
@@ -62,7 +62,7 @@ class TestModel(unittest.TestCase):
         self.assertFalse(obj_model._faces[0].is_equal([0,1,2,3]))
 
     def test_cube_bbox(self):
-        obj_data = ObjLoader.ObjLoader('../example/cube.obj')
+        obj_data = ObjReader.ObjLoader('../example/cube.obj')
         obj_model = Model.load_fromdata(obj_data)
         size = obj_model._size
         self.assertTrue(size[0] == 1.)

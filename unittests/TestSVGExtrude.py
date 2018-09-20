@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import svg
-import Exporter
+import ObjExporter
 from model import Model
 
 if __name__ == "__main__":
@@ -15,4 +15,4 @@ if __name__ == "__main__":
         print(f'triangulating path={path._id} shapes={len(path._shapes)}')
         combined_model.merge(path.extrude(10.))
 
-    Exporter.write(combined_model, f'./export/_{filename}_extruded.obj')
+    ObjExporter.write(combined_model, f'./export/_{filename}_extruded.obj')

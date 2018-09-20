@@ -6,7 +6,7 @@ import MtxMath
 from euclid import euclid
 import numpy as np
 import svg
-import Exporter
+import ObjExporter
 import math
 
 def rotation_angle(v1, v2):
@@ -53,4 +53,4 @@ if __name__ == "__main__":
     embedded_model.get_group('svg')._material._diffuse = [1., 0., 0.]
     embedded_model.extrude(1., faces=embedded_model.get_group('svg')._faces)
 
-    Exporter.write(embedded_model, f'./export/test_label.obj')
+    ObjExporter.write(embedded_model, f'./export/test_label.obj')

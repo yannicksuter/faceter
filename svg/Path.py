@@ -11,7 +11,7 @@ from svg.Shape import *
 from svg.BoundingBox import BoundingBox
 
 from model import *
-import Exporter
+import ObjExporter
 
 class Path:
     def __init__(self):

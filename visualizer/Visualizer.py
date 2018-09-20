@@ -3,7 +3,7 @@ import logging
 # from pyglet.gl import *
 # from pyglet import image, resource, graphics
 
-import ObjLoader
+import ObjReader
 import model
 
 import ctypes, math
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     #     logging.error("Usage: %s file.obj" % sys.argv[0])
     # else:
     filename = 'cube'
-    obj_data = ObjLoader.ObjLoader(f'./example/{filename}.obj')
+    obj_data = ObjReader.ObjLoader(f'./example/{filename}.obj')
     obj_model = model.Model.load_fromdata(obj_data, scale=10)
     obj_model.simplify()
 

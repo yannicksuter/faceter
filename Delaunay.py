@@ -14,7 +14,7 @@ Robust checks disabled by default. May not work in degenerate set of points.
 import numpy as np
 from model import Model
 import math
-import Exporter
+import ObjExporter
 import VecMath
 
 class Delaunay2D:
@@ -278,4 +278,4 @@ if __name__ == "__main__":
 
     # export to obj file
     obj_model._update()
-    Exporter.write_obj(obj_model, f'./export/_delanay2d.obj', -obj_model._center)
+    ObjExporter.write_obj(obj_model, f'./export/_delanay2d.obj', -obj_model._center)
