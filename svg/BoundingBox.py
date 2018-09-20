@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class BoundingBox:
     def __init__(self):
@@ -55,3 +56,8 @@ class BoundingBox:
     def _center(self):
         """ Get center of bounding box """
         return self._min + self._size * 0.5
+
+    @property
+    def _radius(self):
+        s = self._size.copy()*.5
+        return math.sqrt(s[0]*s[0] + s[1]*s[1])
