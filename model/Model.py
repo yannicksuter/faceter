@@ -164,10 +164,15 @@ class Model:
         self._faces.append(face)
         return face
 
-    def remove_face(self, face):
+    def remove_face(self, face_ref):
         # todo: remove unused verts when removing a face
-        if face in self._faces:
-            self._faces.remove(face)
+        if isinstance(face_ref, list):
+            for face in face_ref:
+                if face in self._faces:
+                    self._faces.remove(face)
+        else:
+            if face_ref in self._faces:
+                self._faces.remove(face_ref)
 
     def transform(self, mtx):
         for i, v in enumerate(self._vertices):
