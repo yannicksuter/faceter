@@ -9,7 +9,10 @@ from euclid import euclid
 def get_random_norm():
     d = euclid.Vector3(random.uniform(0, 1), random.uniform(0, 1), 0.).normalize()
     # d = euclid.Vector3(0., 0., 0.)
-    d.z = random.uniform(-1, 1)
+    # d.x = random.uniform(-1, 1)
+    # d.y = random.uniform(-1, 1)
+    # d.z = random.uniform(-1, 1)
+    # d.z = 1.
     return d
 
 if __name__ == "__main__":
@@ -23,8 +26,9 @@ if __name__ == "__main__":
         rnd_d = get_random_norm()
         # rnd_h = radius+random.uniform(0, 1)*radius*.1
         dir = vm.unit_vector(vertex)
-        transf = MtxMath.conv_to_euclid(vm.rotate_fromto_matrix(dir, np.array([0., 0., -1.])))
+        transf = MtxMath.conv_to_euclid(vm.rotate_fromto_matrix(np.array([0., 0., 1.]), dir))
         tv = transf * (rnd_d*euclid.Vector3(l,l,10))
+        print(f'{vertex}/{vm.len(vertex)} -> {vertex + tv}/{vm.len(vertex+tv)}')
         vertex += tv
 
     # sphere_model.triangulate()
