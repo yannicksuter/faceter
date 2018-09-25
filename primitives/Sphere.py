@@ -32,7 +32,7 @@ class Sphere:
         for face in index_array:
             vertices = []
             for v_id in face:
-                vertices.extend([vertex_array[v_id]])
+                vertices.extend([vertex_array[v_id]*self._radius])
             sphere_model.add_face(list(reversed(vertices)))
             # sphere_model.add_face(vertices)
         return sphere_model
