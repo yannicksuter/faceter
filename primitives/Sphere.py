@@ -1,8 +1,7 @@
 import model
-import math
 from euclid import euclid
 import numpy as np
-
+import VecMath as vm
 
 class Sphere:
     __octahedron_vertices = np.array([
@@ -27,15 +26,15 @@ class Sphere:
         self._center = euclid.Vector3(center[0], center[1], center[2])
         self._radius = radius
 
-    def triangulate(self, iterations):
-        vertex_array, index_array = self.__create_unit_sphere()
+    def triangulate(self, recursion_level=2):
+        vertex_array, index_array = self.__create_unit_sphere(recursion_level)
         sphere_model = model.Model()
         for face in index_array:
             vertices = []
             for v_id in face:
                 vertices.extend([vertex_array[v_id]])
-            print(vertices)
-            sphere_model.add_face(vertices)
+            sphere_model.add_face(list(reversed(vertices)))
+            # sphere_model.add_face(vertices)
         return sphere_model
 
     def __normalize_v3(self, arr):
@@ -65,20 +64,17 @@ class Sphere:
         #   /  \  /  \      t2 [b,1,c]
         #  /____\/____\     t3 [a,b,c]
         # 0      a     2    t4 [a,c,2]
-        v0 = vertices[triangles[:, 0]]
-        v1 = vertices[triangles[:, 1]]
-        v2 = vertices[triangles[:, 2]]
-        a = (v0 + v2) * 0.5
-        b = (v0 + v1) * 0.5
-        c = (v1 + v2) * 0.5
-        self.__normalize_v3(a)
-        self.__normalize_v3(b)
-        self.__normalize_v3(c)
 
-        # Stack the triangles together.
-        vertices = np.vstack((v0, b, a, b, v1, c, a, b, c, a, c, v2))
-        # Now our vertices are duplicated, and thus our triangle structure are unnecesarry.
-        return vertices, np.arange(len(vertices)).reshape((-1, 3))
+        v = []
+        for tri in triangles:
+            v0 = vertices[tri[0]]
+            v1 = vertices[tri[1]]
+            v2 = vertices[tri[2]]
+            a = vm.unit_vector((v0 + v2) * 0.5)
+            b = vm.unit_vector((v0 + v1) * 0.5)
+            c = vm.unit_vector((v1 + v2) * 0.5)
+            v += [v0, b, a, b, v1, c, a, b, c, a, c, v2]
+        return v, np.arange(len(v)).reshape((-1, 3))
 
     def __create_unit_sphere(self, recursion_level=2):
         vertex_array, index_array = self.__octahedron_vertices, self.__octahedron_triangles

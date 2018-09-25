@@ -6,7 +6,7 @@ import numpy as np
 
 if __name__ == "__main__":
     sphere = primitives.Sphere(100.)
-    sphere_model = sphere.triangulate(2)
+    sphere_model = sphere.triangulate(recursion_level=3)
 
     sphere_model.triangulate()
     ObjExporter.write(sphere_model, f'./export/_sphere.obj')

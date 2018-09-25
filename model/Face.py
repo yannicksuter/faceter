@@ -13,6 +13,9 @@ class Face:
         self._edges = []
         self.__update()
 
+    def __repr__(self):
+        return f'Face({self._vertex_ids})'
+
     def __update(self):
         self._edges = []
         for i in range(len(self._vertex_ids)):
