@@ -24,11 +24,10 @@ if __name__ == "__main__":
 
     for vertex in sphere_model._vertices:
         rnd_d = get_random_norm()
-        # rnd_h = radius+random.uniform(0, 1)*radius*.1
         dir = vm.unit_vector(vertex)
         transf = MtxMath.conv_to_euclid(vm.rotate_fromto_matrix(np.array([0., 0., 1.]), dir))
         tv = transf * (rnd_d*euclid.Vector3(l,l,10))
-        print(f'{vertex}/{vm.len(vertex)} -> {vertex + tv}/{vm.len(vertex+tv)}')
+        # print(f'{vertex}/{vm.len(vertex)} -> {vertex + tv}/{vm.len(vertex+tv)}')
         vertex += tv
 
     # sphere_model.triangulate()
