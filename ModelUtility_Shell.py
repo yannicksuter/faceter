@@ -75,7 +75,7 @@ def generate_shell(model, thickness, visibility):
     # generate the offset vertices
     shell_vertices = []
     for idx, vertex in enumerate(model._vertices):
-        connected_faces = model.get_faces_with_vertex_id(idx)
+        connected_faces = model.get_faces_with_vertex(idx)
         offset_vertex = calculate_offset_vertex(vertex, connected_faces, thickness)
         shell_vertices.append(offset_vertex)
 

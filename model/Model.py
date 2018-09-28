@@ -93,7 +93,7 @@ class Model:
         for v_id in range(len(self._vertices)):
             v_norm = np.array([0.,0.,0.])
             for face in self._faces:
-                if face.contains_vertex_id(v_id):
+                if face.contains_vertex(v_id):
                     v_norm += face._norm
             self._vertices_norm.append(VecMath.unit_vector(v_norm))
 
@@ -101,11 +101,6 @@ class Model:
         for face in self._faces:
             for edge in face._edges:
                 edge.calculate_neighbours([f for f in self._faces if face != f])
-            #
-            # face._neighbour_faces = []
-            # for face_ in self._faces:
-            #     if face is not face_ and face.is_neighbour(face_):
-            #         face._neighbour_faces.append(face_)
 
     def calculate_boundingbox(self):
         if len(self._vertices) > 0:
@@ -130,14 +125,28 @@ class Model:
         """ Get center of bounding box """
         return self._bbox[0] + self._size * 0.5
 
-    def get_faces_with_vertex_id(self, vertex_id, in_group=None):
+    def get_faces_with_vertex(self, vertex, in_group=None):
         """ Get list of faces that use vertex (defined bt vertex_id) """
         faces = []
-        for face in self._faces:
-            if face.contains_vertex_id(vertex_id):
-                if in_group==face._group or in_group is None:
-                    faces.append(face)
+        if isinstance(vertex, int):
+            for face in self._faces:
+                if face.contains_vertex(vertex):
+                    if in_group==face._group or in_group is None:
+                        faces.append(face)
+        else:
+            raise NotImplementedError
         return faces
+
+    def get_edges_with_vertex(self, vertex):
+        edges = []
+        if isinstance(vertex, int):
+            for face in self._faces:
+                for edge in face._edges:
+                    if edge.v0_id == vertex or edge.v1_id == vertex:
+                        edges.append(edge)
+        else:
+            raise NotImplementedError
+        return edges
 
     def get_vertId(self, vertex, epsilon=.00001):
         for vid in range(len(self._vertices)):

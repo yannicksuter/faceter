@@ -256,7 +256,7 @@ if __name__ == "__main__":
     v_heights = []
     for idx, vertex in enumerate(obj_model._vertices):
         vertex_conntected = []
-        connected_faces = obj_model.get_faces_with_vertex_id(idx)
+        connected_faces = obj_model.get_faces_with_vertex(idx)
         for face in connected_faces:
             for edge in face._edges:
                 if edge.v0_id == idx:

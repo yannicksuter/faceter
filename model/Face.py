@@ -54,16 +54,19 @@ class Face:
     def get_vertex_by_id(self, id):
         return self._model._vertices[id]
 
-    def contains_vertex_id(self, vertex_id):
+    def contains_vertex(self, vertex):
         """ Returns True if vertex_id is used by the face """
-        for id in self._vertex_ids:
-            if id == vertex_id:
-                return True
+        if isinstance(vertex, int):
+            for id in self._vertex_ids:
+                if id == vertex:
+                    return True
+        else:
+            raise NotImplementedError
         return False
 
     def is_equal(self, vertex_ids):
         """Returns True if passed vertex_ids define the same face"""
-        if not self.contains_vertex_id(vertex_ids[0]):
+        if not self.contains_vertex(vertex_ids[0]):
             return False
 
         offset = None
