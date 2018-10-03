@@ -9,6 +9,7 @@ from euclid import euclid
 from model import *
 from ModelUtility_Facet import Facet
 from ModelUtility_Shell import *
+from TimeIt import timeit
 
 
 def get_random_norm():
@@ -21,6 +22,7 @@ def rotation_angle(v1, v2):
         angle += (2. * math.pi)
     return angle
 
+@timeit
 def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
     """ http://mathcountsnotes.blogspot.com/2013/05/the-largest-rectangle-inscribed-in-any.html """
     A = euclid.Point2(tri_vertice[side_idx%3+0].x, tri_vertice[side_idx%3+0].y)
@@ -43,6 +45,7 @@ def fit_rect_in_triangle(tri_vertice, side_idx, rectangle):
 
     return position, scaling, rotation
 
+@timeit
 def embed_label(model, face, side, label, glyph):
     # transform face to shape (into which we will embed the label)
     transform = MtxMath.conv_to_euclid(VecMath.rotate_fromto_matrix(face._norm, np.array([0., 0., 1.])))
@@ -65,7 +68,7 @@ def embed_label(model, face, side, label, glyph):
 
     # (optional) extrude the label
     embedded_model.get_group('svg')._material._diffuse = [1., 0., 0.]
-    embedded_model.extrude(1., faces=embedded_model.get_group('svg')._faces)
+    embedded_model.extrude(-.5, faces=embedded_model.get_group('svg')._faces)
 
     # replace initial face with new 'labeled face'
     model.remove_face(face)

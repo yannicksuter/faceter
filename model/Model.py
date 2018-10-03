@@ -5,6 +5,8 @@ from model.Face import Face
 from model.Group import Group
 import VecMath
 
+from TimeIt import timeit
+
 class Model:
     def __init__(self):
         self._name = 'unknown'
@@ -189,6 +191,7 @@ class Model:
             self._vertices[i] = np.array([vt[0], vt[1], vt[2]])
         self._update()
 
+    @timeit
     def merge(self, model, group_name=None):
         if not isinstance(model, Model):
             raise RuntimeError("Cannot merge object other than type Model.")
@@ -207,6 +210,7 @@ class Model:
                 face.reverse()
             self._update()
 
+    @timeit
     def simplify(self, epsilon=.00001):
         face_count_before = len(self._faces)
         for face in list(self._faces): # very important to copy the list first as we modify while iteration is not done yet
@@ -221,6 +225,7 @@ class Model:
         self._update()
         print(f'Simplify: Face count {face_count_before} before -> {len(self._faces)} after')
 
+    @timeit
     def triangulate(self):
         face_count_before = len(self._faces)
 
@@ -280,6 +285,7 @@ class Model:
         else:
             self.remove_face(face)
 
+    @timeit
     def extrude(self, length, faces=None, group=None, invert_inner_face=False):
         """Convenience method to extrude multiple faces/groups with a single call."""
         if faces:

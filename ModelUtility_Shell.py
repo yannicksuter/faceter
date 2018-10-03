@@ -3,6 +3,7 @@ import VecMath as vm
 from model import *
 from primitives.Plane import Plane
 import ObjExporter
+from TimeIt import timeit
 
 def get_first_plane(vertex, faces):
     """ First plane: Find the plane which center is closest to the vertex """
@@ -65,6 +66,7 @@ def calculate_offset_vertex(vertex, connected_faces, thickness):
             ref_plane3 = planes[get_third_plane(intersection_line[1], planes, [ref_plane1, ref_plane2])]
             return ref_plane3.intersect_with_ray(intersection_line[0], intersection_line[1])
 
+@timeit
 def generate_shell(model, thickness, visibility):
     """ Duplicate a surface and offsets it by thickness"""
     if len(model._faces) != len(visibility):

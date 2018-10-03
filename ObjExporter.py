@@ -4,6 +4,8 @@ import VecMath
 import MtxMath
 from euclid import euclid
 
+from TimeIt import timeit
+
 def write_obj_vertices(file, model, transform):
     """Write vertices to obj file"""
     file.write(f'\n')
@@ -81,6 +83,7 @@ def write_obj_split(model, export_filepath, transform=euclid.Matrix4.new_identit
     except:
         print(f'Export: {export_filepath} file could not be written.')
 
+@timeit
 def write(model, filename, orientation_vec=None):
     """Rotate and center object to lay flat on the heat-bead"""
     model._update()
