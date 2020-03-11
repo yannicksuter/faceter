@@ -39,6 +39,7 @@ class Model:
         cls._update()
         return cls
 
+    @timeit
     def _update(self):
         self.calculate_centers()
         self.calculate_neighbours()
